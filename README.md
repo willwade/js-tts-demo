@@ -88,4 +88,40 @@ This is a web-based demonstration of the `js-tts-wrapper` library, showcasing it
 
 - This demo is for demonstration purposes only
 - API keys are stored in environment variables for security
-- SherpaOnnx requires additional setup for offline TTS
+## SherpaOnnx Setup
+
+SherpaOnnx is a native library that requires specific environment variables to be set correctly based on the operating system:
+
+- On macOS: `DYLD_LIBRARY_PATH`
+- On Linux: `LD_LIBRARY_PATH`
+- On Windows: `PATH`
+
+The scripts in this project automatically set these environment variables for you when you use the provided npm scripts.
+
+### For DigitalOcean App Platform
+
+If you're deploying to DigitalOcean App Platform, use the following commands:
+
+```bash
+# For building
+npm run build:do
+# or
+yarn build:do
+# or
+pnpm build:do
+
+# For starting the server
+npm run start:do
+# or
+yarn start:do
+# or
+pnpm start:do
+```
+
+Alternatively, you can set the environment variable in the DigitalOcean App Platform dashboard:
+
+1. Go to your app in the DigitalOcean dashboard
+2. Navigate to the Settings tab
+3. Under "Environment Variables", add:
+   - Key: `LD_LIBRARY_PATH`
+   - Value: `/workspace/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH`

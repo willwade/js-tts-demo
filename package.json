@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH next dev",
-    "build": "DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH next build",
-    "start": "DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH next start",
-    "lint": "next lint"
+    "dev": "bash scripts/set-sherpaonnx-env.sh next dev",
+    "build": "bash scripts/set-sherpaonnx-env.sh next build",
+    "start": "bash scripts/set-sherpaonnx-env.sh next start",
+    "start:do": "bash scripts/set-sherpaonnx-env-linux.sh next start",
+    "build:do": "bash scripts/set-sherpaonnx-env-linux.sh next build",
+    "lint": "next lint",
+    "check-env": "node scripts/check-sherpaonnx-env.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

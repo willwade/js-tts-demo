@@ -1,0 +1,19 @@
+[Unit]
+Description=JS TTS Demo with SherpaOnnx
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/js-tts-demo
+ExecStart=/usr/bin/npm run start:do:with-sherpa
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=js-tts-demo
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target

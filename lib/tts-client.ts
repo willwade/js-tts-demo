@@ -188,6 +188,7 @@ export async function fetchVoices(engine: TTSEngine, credentials: any): Promise<
     }
 
     const voices = await response.json();
+    console.log(`Fetched ${voices.length} voices for ${engine}:`, voices.slice(0, 5));
     return voices;
   } catch (error) {
     console.error(`Error fetching voices for ${engine}:`, error);

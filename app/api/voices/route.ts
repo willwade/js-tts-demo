@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  AzureTTSClient,
-  ElevenLabsTTSClient,
-  GoogleTTSClient,
-  OpenAITTSClient,
-  PlayHTTTSClient,
-  PollyTTSClient,
-  SherpaOnnxTTSClient,
-} from "js-tts-wrapper";
 
-// Import fetch polyfill
-import "@/lib/fetch-polyfill";
+// Import each client individually to avoid importing SherpaOnnx
+import { AzureTTSClient } from "js-tts-wrapper/engines/azure";
+import { ElevenLabsTTSClient } from "js-tts-wrapper/engines/elevenlabs";
+import { GoogleTTSClient } from "js-tts-wrapper/engines/google";
+import { OpenAITTSClient } from "js-tts-wrapper/engines/openai";
+import { PlayHTTTSClient } from "js-tts-wrapper/engines/playht";
+import { PollyTTSClient } from "js-tts-wrapper/engines/polly";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,7 +63,37 @@ export async function GET(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          client = new SherpaOnnxTTSClient({});
+          // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
+          try {
+            // Make a request to the standalone SherpaOnnx server
+            const response = await fetch(`http://localhost:3002/voices`);
+
+            if (!response.ok) {
+              let errorMessage = 'Failed to get SherpaOnnx voices';
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+              } catch (e) {
+                // If the response is not JSON, use the status text
+                errorMessage = `Failed to get SherpaOnnx voices: ${response.statusText}`;
+              }
+              return NextResponse.json(
+                { error: errorMessage },
+                { status: response.status }
+              );
+            }
+
+            // Return the voices directly
+            const voices = await response.json();
+            console.log(`SherpaOnnx API returned ${voices.length} voices. First voice:`, voices[0]);
+            return NextResponse.json(voices);
+          } catch (error) {
+            console.error('Error proxying to SherpaOnnx API:', error);
+            return NextResponse.json(
+              { error: `Failed to get SherpaOnnx voices: ${error.message}` },
+              { status: 500 }
+            );
+          }
           break;
 
         default:
@@ -75,12 +101,26 @@ export async function GET(request: NextRequest) {
       }
 
       // Check if credentials are valid
-      const credentialsValid = await client.checkCredentials();
-      if (!credentialsValid) {
-        return NextResponse.json(
-          { error: `Invalid credentials for ${engine} TTS engine` },
-          { status: 401 }
-        );
+      try {
+        const credentialsValid = await client.checkCredentials();
+        if (!credentialsValid) {
+          return NextResponse.json(
+            { error: `Invalid credentials for ${engine} TTS engine` },
+            { status: 401 }
+          );
+        }
+      } catch (error) {
+        console.error(`Error checking credentials for ${engine} TTS engine:`, error);
+
+        // For SherpaOnnx, we want to continue even if credentials check fails
+        if (engine === 'sherpaonnx') {
+          console.log('SherpaOnnx model files not available. Using mock implementation for example.');
+        } else {
+          return NextResponse.json(
+            { error: `Error checking credentials for ${engine} TTS engine: ${error.message}` },
+            { status: 500 }
+          );
+        }
       }
     } catch (error) {
       console.error(`Error creating ${engine} TTS client:`, error);

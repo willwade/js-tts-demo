@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { saveAudioAsWav, synthesizeSpeech, useTTSStore } from "@/lib/tts-client"
+import { saveAudioAsWav, synthesizeSpeech, useTTSStore, type Voice } from "@/lib/tts-client"
 import { useToast } from "@/components/ui/use-toast"
 import { Download, Loader2, Pause, Play, Volume2 } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 
 export function PlaybackTab() {
-  const { selectedVoice, selectedVoices, audioUrl, setAudioUrl, isPlaying, setIsPlaying } = useTTSStore()
+  const { selectedVoice, selectedVoices, audioUrl, setAudioUrl, isPlaying, setIsPlaying, credentials } = useTTSStore()
   const [activeVoice, setActiveVoice] = useState<Voice | null>(selectedVoice)
   const { toast } = useToast()
   const [text, setText] = useState(
@@ -72,10 +72,18 @@ export function PlaybackTab() {
 
   // Update active voice when selectedVoice changes
   useEffect(() => {
-    if (selectedVoice) {
+    if (selectedVoice && credentials[selectedVoice.engine]?.enabled) {
       setActiveVoice(selectedVoice)
+    } else if (selectedVoices.length > 0) {
+      // Find the first voice from an enabled engine
+      const enabledVoice = selectedVoices.find(voice => credentials[voice.engine]?.enabled)
+      if (enabledVoice) {
+        setActiveVoice(enabledVoice)
+      }
+    } else {
+      setActiveVoice(null)
     }
-  }, [selectedVoice])
+  }, [selectedVoice, selectedVoices, credentials])
 
   // Generate speech
   const handleGenerateSpeech = async () => {
@@ -172,20 +180,41 @@ export function PlaybackTab() {
                 className="p-2 border rounded-md bg-background"
                 value={activeVoice ? `${activeVoice.engine}-${activeVoice.id}` : ''}
                 onChange={(e) => {
-                  const [engine, id] = e.target.value.split('-');
+                  const value = e.target.value;
+                  if (!value) return;
+
+                  // Extract engine and ID from the value
+                  // The ID might contain hyphens, so we need to be careful with the split
+                  const firstHyphenIndex = value.indexOf('-');
+                  if (firstHyphenIndex === -1) return;
+
+                  const engine = value.substring(0, firstHyphenIndex);
+                  const id = value.substring(firstHyphenIndex + 1);
+
+                  console.log(`Selected voice: engine=${engine}, id=${id}`);
+
+                  // Find the voice in the selected voices
                   const voice = [...selectedVoices, selectedVoice].filter(Boolean).find(
                     v => v && v.engine === engine && v.id === id
                   );
-                  if (voice) setActiveVoice(voice);
+
+                  if (voice) {
+                    console.log('Found voice:', voice);
+                    setActiveVoice(voice);
+                  } else {
+                    console.error('Voice not found for:', engine, id);
+                  }
                 }}
               >
                 <option value="">-- Select a voice --</option>
-                {selectedVoice && (
+                {selectedVoice && credentials[selectedVoice.engine]?.enabled && (
                   <option value={`${selectedVoice.engine}-${selectedVoice.id}`}>
                     {selectedVoice.name} ({selectedVoice.engine}) - Primary
                   </option>
                 )}
-                {selectedVoices.filter(v => !selectedVoice || v.id !== selectedVoice.id || v.engine !== selectedVoice.engine)
+                {selectedVoices
+                  .filter(v => credentials[v.engine]?.enabled) // Only show voices from enabled engines
+                  .filter(v => !selectedVoice || v.id !== selectedVoice.id || v.engine !== selectedVoice.engine)
                   .map(voice => (
                     <option key={`${voice.engine}-${voice.id}`} value={`${voice.engine}-${voice.id}`}>
                       {voice.name} ({voice.engine})

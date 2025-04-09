@@ -95,6 +95,8 @@ export function VoicesTab() {
       .filter(([_, config]) => config.enabled)
       .map(([engine]) => engine as TTSEngine)
 
+    console.log('Enabled engines:', enabledEngines);
+
     if (enabledEngines.length === 0) {
       toast({
         title: "No engines enabled",
@@ -129,7 +131,19 @@ export function VoicesTab() {
     })
 
     const allVoicesResults = await Promise.all(allVoicesPromises)
+
+    // Debug each engine's voices
+    enabledEngines.forEach((engine, index) => {
+      console.log(`${engine} voices count:`, allVoicesResults[index].length);
+      console.log(`${engine} first voice:`, allVoicesResults[index][0]);
+    });
+
     const allVoices = allVoicesResults.flat()
+    console.log('All voices after flat:', allVoices.length);
+
+    // Check for sherpaonnx voices specifically
+    const sherpaonnxVoices = allVoices.filter(v => v.engine === 'sherpaonnx');
+    console.log('SherpaOnnx voices in allVoices:', sherpaonnxVoices.length);
 
     setVoices(allVoices)
 
@@ -181,6 +195,38 @@ export function VoicesTab() {
     polly: filteredVoices.filter((v) => v.engine === "polly"),
     sherpaonnx: filteredVoices.filter((v) => v.engine === "sherpaonnx"),
   }
+
+  // Log the number of voices for each engine
+  console.log('Voices by engine:', {
+    azure: voicesByEngine.azure.length,
+    elevenlabs: voicesByEngine.elevenlabs.length,
+    google: voicesByEngine.google.length,
+    openai: voicesByEngine.openai.length,
+    playht: voicesByEngine.playht.length,
+    polly: voicesByEngine.polly.length,
+    sherpaonnx: voicesByEngine.sherpaonnx.length,
+  });
+
+  // Log a sample of sherpaonnx voices if available
+  if (voicesByEngine.sherpaonnx.length > 0) {
+    console.log('Sample sherpaonnx voice:', voicesByEngine.sherpaonnx[0]);
+  }
+
+  // Debug voice counts
+  console.log('Voice counts:', {
+    total: voices.length,
+    filtered: filteredVoices.length,
+    azure: voicesByEngine.azure.length,
+    elevenlabs: voicesByEngine.elevenlabs.length,
+    google: voicesByEngine.google.length,
+    openai: voicesByEngine.openai.length,
+    playht: voicesByEngine.playht.length,
+    polly: voicesByEngine.polly.length,
+    sherpaonnx: voicesByEngine.sherpaonnx.length,
+  });
+
+  // Debug sherpaonnx voices
+  console.log('SherpaOnnx voices:', voices.filter(v => v.engine === 'sherpaonnx'));
 
   return (
     <div className="space-y-6">

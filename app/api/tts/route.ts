@@ -1,16 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  AzureTTSClient,
-  ElevenLabsTTSClient,
-  GoogleTTSClient,
-  OpenAITTSClient,
-  PlayHTTTSClient,
-  PollyTTSClient,
-  SherpaOnnxTTSClient,
-} from "js-tts-wrapper";
 
-// Import fetch polyfill
-import "@/lib/fetch-polyfill";
+// Import each client individually to avoid importing SherpaOnnx
+import { AzureTTSClient } from "js-tts-wrapper/engines/azure";
+import { ElevenLabsTTSClient } from "js-tts-wrapper/engines/elevenlabs";
+import { GoogleTTSClient } from "js-tts-wrapper/engines/google";
+import { OpenAITTSClient } from "js-tts-wrapper/engines/openai";
+import { PlayHTTTSClient } from "js-tts-wrapper/engines/playht";
+import { PollyTTSClient } from "js-tts-wrapper/engines/polly";
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,7 +62,49 @@ export async function POST(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          client = new SherpaOnnxTTSClient({});
+          // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
+          try {
+            // Make a request to the standalone SherpaOnnx server
+            const response = await fetch(`http://localhost:3002/tts`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ text, voiceId, options }),
+            });
+
+            if (!response.ok) {
+              let errorMessage = 'Failed to synthesize speech with SherpaOnnx';
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+              } catch (e) {
+                // If the response is not JSON, use the status text
+                errorMessage = `Failed to synthesize speech with SherpaOnnx: ${response.statusText}`;
+              }
+              return NextResponse.json(
+                { error: errorMessage },
+                { status: response.status }
+              );
+            }
+
+            // Get the audio buffer from the response
+            const audioBuffer = await response.arrayBuffer();
+
+            // Return the audio as a response
+            return new NextResponse(audioBuffer, {
+              headers: {
+                'Content-Type': 'audio/wav',
+                'Content-Length': audioBuffer.byteLength.toString(),
+              },
+            });
+          } catch (error) {
+            console.error('Error proxying to SherpaOnnx API:', error);
+            return NextResponse.json(
+              { error: `Failed to synthesize speech with SherpaOnnx: ${error.message}` },
+              { status: 500 }
+            );
+          }
           break;
 
         default:

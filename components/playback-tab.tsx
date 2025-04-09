@@ -11,7 +11,8 @@ import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 
 export function PlaybackTab() {
-  const { selectedVoice, audioUrl, setAudioUrl, isPlaying, setIsPlaying } = useTTSStore()
+  const { selectedVoice, selectedVoices, audioUrl, setAudioUrl, isPlaying, setIsPlaying } = useTTSStore()
+  const [activeVoice, setActiveVoice] = useState<Voice | null>(selectedVoice)
   const { toast } = useToast()
   const [text, setText] = useState(
     "Hello, this is a test of the Text to Speech API. It sounds quite natural, doesn't it?",
@@ -69,12 +70,19 @@ export function PlaybackTab() {
     }
   }, [volume])
 
+  // Update active voice when selectedVoice changes
+  useEffect(() => {
+    if (selectedVoice) {
+      setActiveVoice(selectedVoice)
+    }
+  }, [selectedVoice])
+
   // Generate speech
   const handleGenerateSpeech = async () => {
-    if (!selectedVoice) {
+    if (!activeVoice) {
       toast({
         title: "No voice selected",
-        description: "Please select a voice from the Voices tab first.",
+        description: "Please select a voice from the dropdown or from the Voices tab.",
         variant: "destructive",
       })
       return
@@ -99,7 +107,7 @@ export function PlaybackTab() {
         format: "mp3",
       }
 
-      const url = await synthesizeSpeech(text, selectedVoice, options)
+      const url = await synthesizeSpeech(text, activeVoice, options)
       setAudioUrl(url)
 
       toast({
@@ -133,7 +141,7 @@ export function PlaybackTab() {
     }
 
     try {
-      await saveAudioAsWav(audioUrl, `tts-${selectedVoice?.engine}-${selectedVoice?.name}.wav`)
+      await saveAudioAsWav(audioUrl, `tts-${activeVoice?.engine}-${activeVoice?.name}.wav`)
       toast({
         title: "Audio saved",
         description: "Audio file has been saved to your device.",
@@ -156,17 +164,50 @@ export function PlaybackTab() {
           <CardDescription>Enter text to convert to speech using the selected voice</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {selectedVoice ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Selected Voice:</span>
-              <Badge variant="secondary">{selectedVoice.name}</Badge>
-              <Badge variant="outline">{selectedVoice.engine}</Badge>
+          <div className="space-y-4">
+            {/* Voice selector dropdown */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Select Voice:</label>
+              <select
+                className="p-2 border rounded-md bg-background"
+                value={activeVoice ? `${activeVoice.engine}-${activeVoice.id}` : ''}
+                onChange={(e) => {
+                  const [engine, id] = e.target.value.split('-');
+                  const voice = [...selectedVoices, selectedVoice].filter(Boolean).find(
+                    v => v && v.engine === engine && v.id === id
+                  );
+                  if (voice) setActiveVoice(voice);
+                }}
+              >
+                <option value="">-- Select a voice --</option>
+                {selectedVoice && (
+                  <option value={`${selectedVoice.engine}-${selectedVoice.id}`}>
+                    {selectedVoice.name} ({selectedVoice.engine}) - Primary
+                  </option>
+                )}
+                {selectedVoices.filter(v => !selectedVoice || v.id !== selectedVoice.id || v.engine !== selectedVoice.engine)
+                  .map(voice => (
+                    <option key={`${voice.engine}-${voice.id}`} value={`${voice.engine}-${voice.id}`}>
+                      {voice.name} ({voice.engine})
+                    </option>
+                  ))
+                }
+              </select>
             </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              No voice selected. Please select a voice from the Voices tab.
-            </div>
-          )}
+
+            {/* Active voice display */}
+            {activeVoice ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Active Voice:</span>
+                <Badge variant="secondary">{activeVoice.name}</Badge>
+                <Badge variant="outline">{activeVoice.engine}</Badge>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No voice selected. Please select a voice from the dropdown or from the Voices tab.
+              </div>
+            )}
+          </div>
 
           <Textarea
             placeholder="Enter text to convert to speech..."
@@ -208,7 +249,7 @@ export function PlaybackTab() {
               Save as WAV
             </Button>
 
-            <Button onClick={handleGenerateSpeech} disabled={isGenerating || !selectedVoice}>
+            <Button onClick={handleGenerateSpeech} disabled={isGenerating || !activeVoice}>
               {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Volume2 className="mr-2 h-4 w-4" />}
               Generate Speech
             </Button>

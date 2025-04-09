@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function VoicesTab() {
-  const { credentials, voices, setVoices, setSelectedVoice } = useTTSStore()
+  const { credentials, voices, setVoices, setSelectedVoice, selectedVoices, toggleSelectedVoice } = useTTSStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState<Record<TTSEngine, boolean>>({
     azure: false,
@@ -26,23 +26,28 @@ export function VoicesTab() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredVoices, setFilteredVoices] = useState<Voice[]>([])
 
-  // Filter voices based on search query
+  // Filter voices based on search query - with debounce for performance
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredVoices(voices)
       return
     }
 
-    const query = searchQuery.toLowerCase()
-    const filtered = voices.filter(
-      (voice) =>
-        voice.name.toLowerCase().includes(query) ||
-        voice.engine.toLowerCase().includes(query) ||
-        voice.languageCodes.some(
-          (lang) => lang.display.toLowerCase().includes(query) || lang.code.toLowerCase().includes(query),
-        ),
-    )
-    setFilteredVoices(filtered)
+    // Debounce search to improve performance
+    const debounceTimeout = setTimeout(() => {
+      const query = searchQuery.toLowerCase()
+      const filtered = voices.filter(
+        (voice) =>
+          (voice.name?.toLowerCase() || '').includes(query) ||
+          (voice.engine?.toLowerCase() || '').includes(query) ||
+          voice.languageCodes?.some(
+            (lang) => (lang.display?.toLowerCase() || '').includes(query) || (lang.code?.toLowerCase() || '').includes(query),
+          ) || false,
+      )
+      setFilteredVoices(filtered)
+    }, 300) // 300ms debounce delay
+
+    return () => clearTimeout(debounceTimeout)
   }, [voices, searchQuery])
 
   // Load voices for a specific engine
@@ -134,14 +139,37 @@ export function VoicesTab() {
     })
   }
 
-  // Select a voice
+  // Select a voice for single selection mode
   const handleSelectVoice = (voice: Voice) => {
     setSelectedVoice(voice)
     toast({
       title: "Voice selected",
-      description: `Selected ${voice.name} from ${voice.engine}.`,
+      description: `Selected ${voice.name} from ${voice.engine} as primary voice.`,
     })
   }
+
+  // Toggle voice selection for multi-selection mode
+  const handleToggleVoice = (voice: Voice) => {
+    toggleSelectedVoice(voice)
+
+    // Check if the voice is already selected
+    const isSelected = selectedVoices.some(v => v.engine === voice.engine && v.id === voice.id)
+
+    toast({
+      title: isSelected ? "Voice removed" : "Voice added",
+      description: isSelected
+        ? `Removed ${voice.name} from selection.`
+        : `Added ${voice.name} from ${voice.engine} to selection.`,
+    })
+  }
+
+  // Load all voices on component mount
+  useEffect(() => {
+    // Only load voices if none are loaded yet
+    if (voices.length === 0) {
+      loadAllVoices()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Group voices by engine
   const voicesByEngine: Record<TTSEngine, Voice[]> = {
@@ -190,7 +218,12 @@ export function VoicesTab() {
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
-          <VoicesList voices={filteredVoices} onSelectVoice={handleSelectVoice} />
+          <VoicesList
+            voices={filteredVoices}
+            onSelectVoice={handleSelectVoice}
+            onToggleVoice={handleToggleVoice}
+            selectedVoices={selectedVoices}
+          />
         </TabsContent>
 
         {Object.entries(voicesByEngine).map(
@@ -213,7 +246,12 @@ export function VoicesTab() {
                     Refresh
                   </Button>
                 </div>
-                <VoicesList voices={engineVoices} onSelectVoice={handleSelectVoice} />
+                <VoicesList
+                  voices={engineVoices}
+                  onSelectVoice={handleSelectVoice}
+                  onToggleVoice={handleToggleVoice}
+                  selectedVoices={selectedVoices}
+                />
               </TabsContent>
             ),
         )}
@@ -222,7 +260,17 @@ export function VoicesTab() {
   )
 }
 
-function VoicesList({ voices, onSelectVoice }: { voices: Voice[]; onSelectVoice: (voice: Voice) => void }) {
+function VoicesList({
+  voices,
+  onSelectVoice,
+  onToggleVoice,
+  selectedVoices
+}: {
+  voices: Voice[];
+  onSelectVoice: (voice: Voice) => void;
+  onToggleVoice: (voice: Voice) => void;
+  selectedVoices: Voice[];
+}) {
   if (voices.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -231,42 +279,65 @@ function VoicesList({ voices, onSelectVoice }: { voices: Voice[]; onSelectVoice:
     )
   }
 
+  // Helper function to check if a voice is selected
+  const isVoiceSelected = (voice: Voice) => {
+    return selectedVoices.some(v => v.engine === voice.engine && v.id === voice.id);
+  };
+
   return (
     <ScrollArea className="h-[500px]">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {voices.map((voice) => (
-          <Card
-            key={`${voice.engine}-${voice.id}`}
-            className="cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => onSelectVoice(voice)}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-base">{voice.name}</CardTitle>
-                <Badge variant="outline">{voice.engine}</Badge>
-              </div>
-              <CardDescription>
-                {voice.gender && `${voice.gender} • `}
-                {voice.languageCodes.map((lang) => lang.display).join(", ")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-xs text-muted-foreground">ID: {voice.id}</div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSelectVoice(voice)
-                  }}
-                >
-                  Select
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {voices.map((voice) => {
+          const selected = isVoiceSelected(voice);
+          return (
+            <Card
+              key={`${voice.engine}-${voice.id}`}
+              className={`cursor-pointer transition-colors ${selected ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'}`}
+              onClick={() => onToggleVoice(voice)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base">{voice.name}</CardTitle>
+                  <div className="flex gap-2">
+                    {selected && <Badge variant="default">Selected</Badge>}
+                    <Badge variant="outline">{voice.engine}</Badge>
+                  </div>
+                </div>
+                <CardDescription>
+                  {voice.gender && `${voice.gender} • `}
+                  {voice.languageCodes.map((lang) => lang.display).join(", ")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">ID: {voice.id}</div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={selected ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleVoice(voice)
+                      }}
+                    >
+                      {selected ? "Remove" : "Add"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onSelectVoice(voice)
+                      }}
+                    >
+                      Set Primary
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </ScrollArea>
   )

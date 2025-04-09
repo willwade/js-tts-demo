@@ -9,6 +9,9 @@ import {
   SherpaOnnxTTSClient,
 } from "js-tts-wrapper";
 
+// Import fetch polyfill
+import "@/lib/fetch-polyfill";
+
 export async function GET(request: NextRequest) {
   try {
     // Get the engine from the query parameters

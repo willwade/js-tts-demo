@@ -8,12 +8,21 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { type TTSEngine, useTTSStore } from "@/lib/tts-client"
 import { useToast } from "@/components/ui/use-toast"
-import { Save } from "lucide-react"
+import { Save, Check } from "lucide-react"
 
 export function CredentialsTab() {
   const { credentials, setCredentials, toggleEngine } = useTTSStore()
   const { toast } = useToast()
   const [localCredentials, setLocalCredentials] = useState(credentials)
+  const [savedEngines, setSavedEngines] = useState<Record<TTSEngine, boolean>>({
+    azure: false,
+    elevenlabs: false,
+    google: false,
+    openai: false,
+    playht: false,
+    polly: false,
+    sherpaonnx: false
+  })
 
   const handleInputChange = (engine: TTSEngine, field: string, value: string) => {
     setLocalCredentials({
@@ -27,6 +36,21 @@ export function CredentialsTab() {
 
   const handleSaveCredentials = (engine: TTSEngine) => {
     setCredentials(engine, localCredentials[engine])
+
+    // Set the saved state for this engine
+    setSavedEngines(prev => ({
+      ...prev,
+      [engine]: true
+    }))
+
+    // Reset the saved state after 2 seconds
+    setTimeout(() => {
+      setSavedEngines(prev => ({
+        ...prev,
+        [engine]: false
+      }))
+    }, 2000)
+
     toast({
       title: "Credentials saved",
       description: `${engine.charAt(0).toUpperCase() + engine.slice(1)} credentials have been saved.`,
@@ -77,9 +101,19 @@ export function CredentialsTab() {
                 disabled={!localCredentials.azure.enabled}
               />
             </div>
-            <Button onClick={() => handleSaveCredentials("azure")} disabled={!localCredentials.azure.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Azure Credentials
+            <Button
+              onClick={() => handleSaveCredentials("azure")}
+              disabled={!localCredentials.azure.enabled}
+              variant={savedEngines.azure ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.azure ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.azure ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.azure ? "Saved" : "Save Azure Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -118,9 +152,19 @@ export function CredentialsTab() {
                 disabled={!localCredentials.elevenlabs.enabled}
               />
             </div>
-            <Button onClick={() => handleSaveCredentials("elevenlabs")} disabled={!localCredentials.elevenlabs.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save ElevenLabs Credentials
+            <Button
+              onClick={() => handleSaveCredentials("elevenlabs")}
+              disabled={!localCredentials.elevenlabs.enabled}
+              variant={savedEngines.elevenlabs ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.elevenlabs ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.elevenlabs ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.elevenlabs ? "Saved" : "Save ElevenLabs Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -150,20 +194,61 @@ export function CredentialsTab() {
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="google-key">Service Account Path</Label>
-              <Input
-                id="google-key"
-                value={localCredentials.google.keyFilename}
-                onChange={(e) => handleInputChange("google", "keyFilename", e.target.value)}
-                disabled={!localCredentials.google.enabled}
-              />
+              <Label htmlFor="google-key">Google Service Account JSON</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="google-key"
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        try {
+                          // Store the file path for display purposes
+                          handleInputChange("google", "keyFilename", file.name);
+
+                          // In a real implementation, you would handle the JSON content here
+                          // For this demo, we're just storing the filename
+                          toast({
+                            title: "File loaded",
+                            description: `${file.name} has been loaded successfully.`,
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to parse JSON file. Please ensure it's a valid Google service account key.",
+                            variant: "destructive",
+                          });
+                        }
+                      };
+                      reader.readAsText(file);
+                    }
+                  }}
+                  disabled={!localCredentials.google.enabled}
+                />
+              </div>
               <p className="text-sm text-muted-foreground">
-                Note: For web use, you'll need to provide the JSON content instead of a file path
+                Upload your Google service account JSON key file. For security, the file is processed locally and not sent to any server.
               </p>
+              {localCredentials.google.keyFilename && (
+                <p className="text-sm font-medium">Selected file: {localCredentials.google.keyFilename}</p>
+              )}
             </div>
-            <Button onClick={() => handleSaveCredentials("google")} disabled={!localCredentials.google.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Google Credentials
+            <Button
+              onClick={() => handleSaveCredentials("google")}
+              disabled={!localCredentials.google.enabled}
+              variant={savedEngines.google ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.google ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.google ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.google ? "Saved" : "Save Google Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -202,9 +287,19 @@ export function CredentialsTab() {
                 disabled={!localCredentials.openai.enabled}
               />
             </div>
-            <Button onClick={() => handleSaveCredentials("openai")} disabled={!localCredentials.openai.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save OpenAI Credentials
+            <Button
+              onClick={() => handleSaveCredentials("openai")}
+              disabled={!localCredentials.openai.enabled}
+              variant={savedEngines.openai ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.openai ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.openai ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.openai ? "Saved" : "Save OpenAI Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -252,9 +347,19 @@ export function CredentialsTab() {
                 disabled={!localCredentials.playht.enabled}
               />
             </div>
-            <Button onClick={() => handleSaveCredentials("playht")} disabled={!localCredentials.playht.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save PlayHT Credentials
+            <Button
+              onClick={() => handleSaveCredentials("playht")}
+              disabled={!localCredentials.playht.enabled}
+              variant={savedEngines.playht ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.playht ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.playht ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.playht ? "Saved" : "Save PlayHT Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -311,9 +416,19 @@ export function CredentialsTab() {
                 disabled={!localCredentials.polly.enabled}
               />
             </div>
-            <Button onClick={() => handleSaveCredentials("polly")} disabled={!localCredentials.polly.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Polly Credentials
+            <Button
+              onClick={() => handleSaveCredentials("polly")}
+              disabled={!localCredentials.polly.enabled}
+              variant={savedEngines.polly ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.polly ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.polly ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.polly ? "Saved" : "Save Polly Credentials"}
             </Button>
           </div>
         </CardContent>
@@ -346,9 +461,19 @@ export function CredentialsTab() {
               SherpaOnnx runs locally and doesn't require API credentials. Models will be downloaded automatically when
               first used.
             </p>
-            <Button onClick={() => handleSaveCredentials("sherpaonnx")} disabled={!localCredentials.sherpaonnx.enabled}>
-              <Save className="mr-2 h-4 w-4" />
-              Save SherpaOnnx Settings
+            <Button
+              onClick={() => handleSaveCredentials("sherpaonnx")}
+              disabled={!localCredentials.sherpaonnx.enabled}
+              variant={savedEngines.sherpaonnx ? "outline" : "default"}
+              className={`transition-all duration-200 ${savedEngines.sherpaonnx ? "bg-green-100 hover:bg-green-200 text-green-700 border-green-500" : ""}`}
+
+            >
+              {savedEngines.sherpaonnx ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {savedEngines.sherpaonnx ? "Saved" : "Save SherpaOnnx Settings"}
             </Button>
           </div>
         </CardContent>

@@ -54,6 +54,7 @@ interface TTSState {
   credentials: TTSCredentials
   voices: Voice[]
   selectedVoice: Voice | null
+  selectedVoices: Voice[]
   isLoading: boolean
   audioUrl: string | null
   isPlaying: boolean
@@ -61,6 +62,10 @@ interface TTSState {
   toggleEngine: (engine: TTSEngine) => void
   setVoices: (voices: Voice[]) => void
   setSelectedVoice: (voice: Voice | null) => void
+  addSelectedVoice: (voice: Voice) => void
+  removeSelectedVoice: (voice: Voice) => void
+  toggleSelectedVoice: (voice: Voice) => void
+  clearSelectedVoices: () => void
   setIsLoading: (isLoading: boolean) => void
   setAudioUrl: (url: string | null) => void
   setIsPlaying: (isPlaying: boolean) => void
@@ -105,6 +110,7 @@ export const useTTSStore = create<TTSState>()(
       },
       voices: [],
       selectedVoice: null,
+      selectedVoices: [],
       isLoading: false,
       audioUrl: null,
       isPlaying: false,
@@ -130,6 +136,21 @@ export const useTTSStore = create<TTSState>()(
         })),
       setVoices: (voices) => set({ voices }),
       setSelectedVoice: (selectedVoice) => set({ selectedVoice }),
+      addSelectedVoice: (voice) => set((state) => ({
+        selectedVoices: [...state.selectedVoices.filter(v => !(v.engine === voice.engine && v.id === voice.id)), voice]
+      })),
+      removeSelectedVoice: (voice) => set((state) => ({
+        selectedVoices: state.selectedVoices.filter(v => !(v.engine === voice.engine && v.id === voice.id))
+      })),
+      toggleSelectedVoice: (voice) => set((state) => {
+        const isSelected = state.selectedVoices.some(v => v.engine === voice.engine && v.id === voice.id);
+        return {
+          selectedVoices: isSelected
+            ? state.selectedVoices.filter(v => !(v.engine === voice.engine && v.id === voice.id))
+            : [...state.selectedVoices, voice]
+        };
+      }),
+      clearSelectedVoices: () => set({ selectedVoices: [] }),
       setIsLoading: (isLoading) => set({ isLoading }),
       setAudioUrl: (audioUrl) => set({ audioUrl }),
       setIsPlaying: (isPlaying) => set({ isPlaying }),
@@ -147,6 +168,12 @@ export const useTTSStore = create<TTSState>()(
 // Function to fetch voices from the API
 export async function fetchVoices(engine: TTSEngine, credentials: any): Promise<Voice[]> {
   try {
+    // Check if the engine is enabled
+    if (!credentials.enabled) {
+      console.warn(`Skipping ${engine} TTS engine as it is disabled`);
+      return [];
+    }
+
     // Call the API to get voices
     const response = await fetch(`/api/voices?engine=${engine}`, {
       method: "GET",

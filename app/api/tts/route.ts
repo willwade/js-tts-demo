@@ -9,6 +9,9 @@ import {
   SherpaOnnxTTSClient,
 } from "js-tts-wrapper";
 
+// Import fetch polyfill
+import "@/lib/fetch-polyfill";
+
 export async function POST(request: NextRequest) {
   try {
     const { text, engine, voiceId, options } = await request.json();

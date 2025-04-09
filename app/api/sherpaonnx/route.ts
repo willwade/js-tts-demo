@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("SherpaOnnx API: Error checking credentials:", error);
       return NextResponse.json(
-        { error: `Error checking SherpaOnnx credentials: ${error.message}` },
+        { error: `Error checking SherpaOnnx credentials: ${error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
@@ -57,17 +57,17 @@ export async function POST(request: NextRequest) {
           "Content-Length": audioBuffer.length.toString(),
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error synthesizing speech with SherpaOnnx:", error);
       return NextResponse.json(
-        { error: `Error synthesizing speech: ${error.message}` },
+        { error: `Error synthesizing speech: ${error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in SherpaOnnx API route:", error);
     return NextResponse.json(
-      { error: `Internal server error: ${error.message}` },
+      { error: `Internal server error: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -90,10 +90,10 @@ export async function GET(request: NextRequest) {
           { status: 401 }
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("SherpaOnnx API: Error checking credentials:", error);
       return NextResponse.json(
-        { error: `Error checking SherpaOnnx credentials: ${error.message}` },
+        { error: `Error checking SherpaOnnx credentials: ${error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
@@ -105,17 +105,17 @@ export async function GET(request: NextRequest) {
       console.log(`SherpaOnnx API: Found ${voices.length} voices`);
 
       return NextResponse.json(voices);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error getting SherpaOnnx voices:", error);
       return NextResponse.json(
-        { error: `Error getting voices: ${error.message}` },
+        { error: `Error getting voices: ${error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in SherpaOnnx API route:", error);
     return NextResponse.json(
-      { error: `Internal server error: ${error.message}` },
+      { error: `Internal server error: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }

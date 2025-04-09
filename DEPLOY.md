@@ -1,6 +1,28 @@
 # Deploying to Digital Ocean
 
-This document provides instructions for deploying the JS TTS Demo application to a Digital Ocean droplet.
+This document provides instructions for deploying the JS TTS Demo application to Digital Ocean.
+
+## Deploying to Digital Ocean App Platform
+
+1. **Create a new App**
+   - Go to the Digital Ocean App Platform dashboard
+   - Click "Create App"
+   - Connect your GitHub repository
+   - Select the js-tts-demo repository
+
+2. **Configure the App**
+   - Select the branch you want to deploy (usually `main`)
+   - Set the source directory to `/`
+   - Set the build command to `npm run build:do:with-sherpa`
+   - Set the run command to `npm run start:do:with-sherpa`
+
+3. **Deploy the App**
+   - Click "Next" and review your settings
+   - Click "Create Resources" to deploy the app
+
+## Deploying to a Digital Ocean Droplet
+
+Alternatively, you can deploy the application to a Digital Ocean droplet.
 
 ## Prerequisites
 

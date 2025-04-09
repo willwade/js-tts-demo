@@ -6,8 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build:do": "next build",
-    "start:do": "next start",
     "build:with-sherpa": "next build",
     "start:with-sherpa": "concurrently \"npm run sherpa-server:env\" \"npm run start\"",
     "build:do:with-sherpa": "next build",

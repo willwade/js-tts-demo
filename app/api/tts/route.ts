@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
           try {
             // Make a request to the standalone SherpaOnnx server
-            const response = await fetch(`http://localhost:3002/tts`, {
+            const response = await fetch(`http://localhost:${process.env.SHERPAONNX_PORT || 3002}/tts`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

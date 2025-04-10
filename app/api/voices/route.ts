@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
           // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
           try {
             // Make a request to the standalone SherpaOnnx server
-            const response = await fetch(`http://localhost:3002/voices`);
+            const response = await fetch(`http://localhost:${process.env.SHERPAONNX_PORT || 3002}/voices`);
 
             if (!response.ok) {
               let errorMessage = 'Failed to get SherpaOnnx voices';

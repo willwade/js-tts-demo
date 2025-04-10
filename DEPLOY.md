@@ -36,7 +36,8 @@ This document provides instructions for deploying the JS TTS Demo application to
 
 5. **SherpaOnnx Configuration**
    - The SherpaOnnx server runs alongside the Next.js application
-   - It listens on port 3002 and the Next.js application communicates with it via HTTP
+   - It listens on port 3002 (set by the SHERPAONNX_PORT environment variable)
+   - The Next.js application communicates with the SherpaOnnx server via HTTP
    - The application uses the `sherpa-onnx-node` package, which automatically detects the platform and architecture
    - The SherpaOnnx server will check if the required libraries are available
    - If the required libraries are not found, it will fall back to a mock implementation

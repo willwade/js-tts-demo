@@ -184,7 +184,7 @@ app.post('/tts', async (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.SHERPAONNX_PORT || 3002;
 app.listen(PORT, () => {
   console.log(`SherpaOnnx server listening on port ${PORT}`);
 });

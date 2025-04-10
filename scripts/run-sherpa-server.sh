@@ -12,14 +12,27 @@ echo "Platform: $PLATFORM, Architecture: $ARCH"
 # Set environment variables based on platform
 if [ "$PLATFORM" = "Darwin" ]; then
   # macOS
+  # The sherpa-onnx-node package automatically detects the platform and architecture
+  # We just need to set the DYLD_LIBRARY_PATH to the correct location
   SHERPA_DIR="$PWD/node_modules/sherpa-onnx-darwin-$ARCH"
 
-  # Check if the directory exists
-  if [ ! -d "$SHERPA_DIR" ]; then
-    echo "Warning: $SHERPA_DIR does not exist. SherpaOnnx may not work correctly."
-    echo "Try running: pnpm add sherpa-onnx-node@^1.11.3 sherpa-onnx-darwin-$ARCH@^1.11.3"
+  # Check if sherpa-onnx-node is installed
+  if ! npm list sherpa-onnx-node > /dev/null 2>&1; then
+    echo "Warning: sherpa-onnx-node is not installed."
+    echo "Using mock implementation for SherpaOnnx."
+    export USE_SHERPAONNX_MOCK=true
   else
-    echo "Found SherpaOnnx directory: $SHERPA_DIR"
+    echo "Found sherpa-onnx-node package."
+
+    # Check if the directory exists
+    if [ ! -d "$SHERPA_DIR" ]; then
+      echo "Warning: $SHERPA_DIR does not exist. This is expected if the package is not installed correctly."
+      echo "Using mock implementation for SherpaOnnx."
+      export USE_SHERPAONNX_MOCK=true
+    else
+      echo "Found SherpaOnnx directory: $SHERPA_DIR"
+      export USE_SHERPAONNX_MOCK=false
+    fi
   fi
 
   # Set environment variables
@@ -38,16 +51,32 @@ if [ "$PLATFORM" = "Darwin" ]; then
   node sherpa-server.js
 elif [ "$PLATFORM" = "Linux" ]; then
   # Linux
-  SHERPA_DIR="$PWD/node_modules/sherpa-onnx-linux-$ARCH"
+  # The sherpa-onnx-node package automatically detects the platform and architecture
+  # We just need to set the LD_LIBRARY_PATH to the correct location
+  if [ "$ARCH" = "x86_64" ]; then
+    # Use x64 instead of x86_64 for the path
+    SHERPA_DIR="$PWD/node_modules/sherpa-onnx-linux-x64"
+  else
+    SHERPA_DIR="$PWD/node_modules/sherpa-onnx-linux-$ARCH"
+  fi
 
-  # Check if the directory exists
-  if [ ! -d "$SHERPA_DIR" ]; then
-    echo "Warning: $SHERPA_DIR does not exist."
+  # Check if sherpa-onnx-node is installed
+  if ! npm list sherpa-onnx-node > /dev/null 2>&1; then
+    echo "Warning: sherpa-onnx-node is not installed."
     echo "Using mock implementation for SherpaOnnx."
     export USE_SHERPAONNX_MOCK=true
   else
-    echo "Found SherpaOnnx directory: $SHERPA_DIR"
-    export USE_SHERPAONNX_MOCK=false
+    echo "Found sherpa-onnx-node package."
+
+    # Check if the directory exists
+    if [ ! -d "$SHERPA_DIR" ]; then
+      echo "Warning: $SHERPA_DIR does not exist. This is expected if the package is not installed correctly."
+      echo "Using mock implementation for SherpaOnnx."
+      export USE_SHERPAONNX_MOCK=true
+    else
+      echo "Found SherpaOnnx directory: $SHERPA_DIR"
+      export USE_SHERPAONNX_MOCK=false
+    fi
   fi
 
   # Set environment variables

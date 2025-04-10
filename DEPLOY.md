@@ -2,7 +2,7 @@
 
 This document provides instructions for deploying the JS TTS Demo application to Digital Ocean.
 
-## Deploying to Digital Ocean App Platform
+## Deploying to Digital Ocean App Platform (Recommended)
 
 1. **Create a new App**
    - Go to the Digital Ocean App Platform dashboard
@@ -23,15 +23,29 @@ This document provides instructions for deploying the JS TTS Demo application to
    - Click "Next" and review your settings
    - Click "Create Resources" to deploy the app
 
-4. **Troubleshooting**
-   - If you encounter build errors, check the build logs for details
-   - The application requires only the `sherpa-onnx-node` package, which is already listed in the dependencies
-   - The SherpaOnnx server will automatically detect if the required libraries are available
+4. **Environment Variables**
+   - No environment variables are required for basic functionality
+   - For Google TTS, you'll need to set `GOOGLE_SA_PATH` to the path of your Google service account key file
+   - For Azure TTS, you'll need to set `MICROSOFT_TOKEN` and `MICROSOFT_REGION`
+   - For ElevenLabs TTS, you'll need to set `ELEVENLABS_API_KEY`
+   - For OpenAI TTS, you'll need to set `OPENAI_API_KEY`
+   - For PlayHT TTS, you'll need to set `PLAYHT_API_KEY` and `PLAYHT_USER_ID`
+   - For Polly TTS, you'll need to set `POLLY_REGION`, `POLLY_AWS_KEY_ID`, and `POLLY_AWS_ACCESS_KEY`
+
+5. **SherpaOnnx Configuration**
+   - The SherpaOnnx server runs alongside the Next.js application
+   - It listens on port 3002 and the Next.js application communicates with it via HTTP
+   - The application uses the `sherpa-onnx-node` package, which automatically detects the platform and architecture
+   - The SherpaOnnx server will check if the required libraries are available
    - If the required libraries are not found, it will fall back to a mock implementation
    - The mock implementation returns a small set of sample voices for testing purposes
+
+6. **Troubleshooting**
+   - If you encounter build errors, check the build logs for details
    - If you see TypeScript errors, you may need to update the error handling in the code
    - If the SherpaOnnx server is not starting, check the logs for environment variable issues
    - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm
+   - If the Next.js application is running on the wrong port, check the App Platform settings and make sure the HTTP port is set to 3000
 
 ## Deploying to a Digital Ocean Droplet
 

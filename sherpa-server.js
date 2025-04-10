@@ -17,16 +17,25 @@ app.use(bodyParser.json());
 
 // Import the SherpaOnnxTTSClient from js-tts-wrapper
 let SherpaOnnxTTSClient;
-try {
-  // Try to dynamically import the SherpaOnnxTTSClient
-  SherpaOnnxTTSClient = require('js-tts-wrapper').SherpaOnnxTTSClient;
-  console.log('Successfully imported SherpaOnnxTTSClient from js-tts-wrapper');
-} catch (error) {
-  console.error('Failed to import SherpaOnnxTTSClient from js-tts-wrapper:', error.message);
 
-  // Create a mock implementation if the import fails
-  console.log('Using mock implementation for SherpaOnnx');
+// Check if we should use the mock implementation
+const useMock = process.env.USE_SHERPAONNX_MOCK === 'true';
 
+if (useMock) {
+  console.log('Using mock implementation for SherpaOnnx (as specified by environment variable)');
+} else {
+  try {
+    // Try to dynamically import the SherpaOnnxTTSClient
+    SherpaOnnxTTSClient = require('js-tts-wrapper').SherpaOnnxTTSClient;
+    console.log('Successfully imported SherpaOnnxTTSClient from js-tts-wrapper');
+  } catch (error) {
+    console.error('Failed to import SherpaOnnxTTSClient from js-tts-wrapper:', error.message);
+    console.log('Using mock implementation for SherpaOnnx due to import failure');
+  }
+}
+
+// Define the mock implementation
+if (!SherpaOnnxTTSClient || useMock) {
   // Mock SherpaOnnxTTSClient class
   SherpaOnnxTTSClient = class MockSherpaOnnxTTSClient {
     constructor(config) {

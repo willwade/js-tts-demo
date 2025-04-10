@@ -38,18 +38,12 @@ elif [ "$PLATFORM" = "Linux" ]; then
 
   # Check if the directory exists
   if [ ! -d "$SHERPA_DIR" ]; then
-    echo "Warning: $SHERPA_DIR does not exist. SherpaOnnx may not work correctly."
-    echo "Installing sherpa-onnx-node and sherpa-onnx-linux-$ARCH..."
-    npm install sherpa-onnx-node@^1.11.3 sherpa-onnx-linux-$ARCH@^1.11.3
-
-    # Check again after installation
-    if [ ! -d "$SHERPA_DIR" ]; then
-      echo "Error: Failed to install $SHERPA_DIR. SherpaOnnx will not work correctly."
-    else
-      echo "Successfully installed SherpaOnnx directory: $SHERPA_DIR"
-    fi
+    echo "Warning: $SHERPA_DIR does not exist."
+    echo "Using mock implementation for SherpaOnnx."
+    export USE_SHERPAONNX_MOCK=true
   else
     echo "Found SherpaOnnx directory: $SHERPA_DIR"
+    export USE_SHERPAONNX_MOCK=false
   fi
 
   # Set environment variables
@@ -57,7 +51,17 @@ elif [ "$PLATFORM" = "Linux" ]; then
   echo "Set LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
   # Create models directory if it doesn't exist
-  MODELS_DIR="/root/.js-tts-wrapper/models"
+  # Check if we're in Digital Ocean App Platform
+  if [ -d "/workspace" ]; then
+    # Digital Ocean App Platform
+    MODELS_DIR="/workspace/.js-tts-wrapper/models"
+  else
+    # Regular Linux environment
+    MODELS_DIR="/root/.js-tts-wrapper/models"
+  fi
+
+  echo "Using models directory: $MODELS_DIR"
+
   if [ ! -d "$MODELS_DIR" ]; then
     echo "Creating models directory: $MODELS_DIR"
     mkdir -p "$MODELS_DIR"

@@ -13,12 +13,23 @@ This document provides instructions for deploying the JS TTS Demo application to
 2. **Configure the App**
    - Select the branch you want to deploy (usually `main`)
    - Set the source directory to `/`
-   - Set the build command to `npm run build:do:with-sherpa`
-   - Set the run command to `npm run start:do:with-sherpa`
+   - Set the build command to `pnpm build:do:with-sherpa`
+   - The run command should be automatically set to `pnpm start:do:with-sherpa` from the Procfile
+   - Make sure to set the Node.js version to 18.x or later
+   - Make sure to select pnpm as the package manager
 
 3. **Deploy the App**
    - Click "Next" and review your settings
    - Click "Create Resources" to deploy the app
+
+4. **Troubleshooting**
+   - If you encounter build errors, check the build logs for details
+   - The application requires only the `sherpa-onnx-node` package, which is already listed in the dependencies
+   - The SherpaOnnx server will automatically detect if the required libraries are available
+   - If the required libraries are not found, it will fall back to a mock implementation
+   - If you see TypeScript errors, you may need to update the error handling in the code
+   - If the SherpaOnnx server is not starting, check the logs for environment variable issues
+   - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm
 
 ## Deploying to a Digital Ocean Droplet
 

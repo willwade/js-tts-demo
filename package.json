@@ -10,6 +10,7 @@
     "build:with-sherpa": "next build",
     "start:with-sherpa": "concurrently \"npm run sherpa-server:env\" \"npm run start\"",
     "build:do:with-sherpa": "pnpm build",
+    "start:do": "next start -p ${PORT:-3000}",
     "start:do:with-sherpa": "concurrently \"pnpm sherpa-server:env\" \"pnpm start:do\"",
     "lint": "next lint",
     "sherpa-server": "node sherpa-server.js",

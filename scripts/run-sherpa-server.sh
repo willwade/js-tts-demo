@@ -29,6 +29,10 @@ if [ "$PLATFORM" = "Darwin" ]; then
   export DYLD_FALLBACK_LIBRARY_PATH="$SHERPA_DIR:$DYLD_FALLBACK_LIBRARY_PATH"
   echo "Set DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH"
 
+  # Set the PORT environment variable
+  export PORT=3002
+  echo "Set PORT=$PORT"
+
   # Run the server
   echo "Starting SherpaOnnx server..."
   node sherpa-server.js
@@ -70,6 +74,10 @@ elif [ "$PLATFORM" = "Linux" ]; then
   # Set the SHERPAONNX_MODEL_DIR environment variable
   export SHERPAONNX_MODEL_DIR="$MODELS_DIR"
   echo "Set SHERPAONNX_MODEL_DIR=$SHERPAONNX_MODEL_DIR"
+
+  # Set the PORT environment variable
+  export PORT=3002
+  echo "Set PORT=$PORT"
 
   # Run the server
   echo "Starting SherpaOnnx server..."

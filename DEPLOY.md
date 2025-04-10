@@ -17,6 +17,7 @@ This document provides instructions for deploying the JS TTS Demo application to
    - The run command should be automatically set to `pnpm start:do:with-sherpa` from the Procfile
    - Make sure to set the Node.js version to 18.x or later
    - Make sure to select pnpm as the package manager
+   - Set the HTTP port to 3000 in the App Platform settings
 
 3. **Deploy the App**
    - Click "Next" and review your settings
@@ -27,6 +28,7 @@ This document provides instructions for deploying the JS TTS Demo application to
    - The application requires only the `sherpa-onnx-node` package, which is already listed in the dependencies
    - The SherpaOnnx server will automatically detect if the required libraries are available
    - If the required libraries are not found, it will fall back to a mock implementation
+   - The mock implementation returns a small set of sample voices for testing purposes
    - If you see TypeScript errors, you may need to update the error handling in the code
    - If the SherpaOnnx server is not starting, check the logs for environment variable issues
    - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm

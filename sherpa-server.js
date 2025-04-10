@@ -19,7 +19,8 @@ app.use(bodyParser.json());
 let SherpaOnnxTTSClient;
 
 // Check if we should use the mock implementation
-const useMock = process.env.USE_SHERPAONNX_MOCK === 'true';
+// For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
+const useMock = true; // process.env.USE_SHERPAONNX_MOCK === 'true';
 
 if (useMock) {
   console.log('Using mock implementation for SherpaOnnx (as specified by environment variable)');

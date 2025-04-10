@@ -16,24 +16,9 @@ if [ "$PLATFORM" = "Darwin" ]; then
   # We just need to set the DYLD_LIBRARY_PATH to the correct location
   SHERPA_DIR="$PWD/node_modules/sherpa-onnx-darwin-$ARCH"
 
-  # Check if sherpa-onnx-node is installed
-  if ! npm list sherpa-onnx-node > /dev/null 2>&1; then
-    echo "Warning: sherpa-onnx-node is not installed."
-    echo "Using mock implementation for SherpaOnnx."
-    export USE_SHERPAONNX_MOCK=true
-  else
-    echo "Found sherpa-onnx-node package."
-
-    # Check if the directory exists
-    if [ ! -d "$SHERPA_DIR" ]; then
-      echo "Warning: $SHERPA_DIR does not exist. This is expected if the package is not installed correctly."
-      echo "Using mock implementation for SherpaOnnx."
-      export USE_SHERPAONNX_MOCK=true
-    else
-      echo "Found SherpaOnnx directory: $SHERPA_DIR"
-      export USE_SHERPAONNX_MOCK=false
-    fi
-  fi
+  # For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
+  echo "Using mock implementation for SherpaOnnx to reduce resource usage."
+  export USE_SHERPAONNX_MOCK=true
 
   # Set environment variables
   export DYLD_LIBRARY_PATH="$SHERPA_DIR:$DYLD_LIBRARY_PATH"
@@ -60,24 +45,9 @@ elif [ "$PLATFORM" = "Linux" ]; then
     SHERPA_DIR="$PWD/node_modules/sherpa-onnx-linux-$ARCH"
   fi
 
-  # Check if sherpa-onnx-node is installed
-  if ! npm list sherpa-onnx-node > /dev/null 2>&1; then
-    echo "Warning: sherpa-onnx-node is not installed."
-    echo "Using mock implementation for SherpaOnnx."
-    export USE_SHERPAONNX_MOCK=true
-  else
-    echo "Found sherpa-onnx-node package."
-
-    # Check if the directory exists
-    if [ ! -d "$SHERPA_DIR" ]; then
-      echo "Warning: $SHERPA_DIR does not exist. This is expected if the package is not installed correctly."
-      echo "Using mock implementation for SherpaOnnx."
-      export USE_SHERPAONNX_MOCK=true
-    else
-      echo "Found SherpaOnnx directory: $SHERPA_DIR"
-      export USE_SHERPAONNX_MOCK=false
-    fi
-  fi
+  # For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
+  echo "Using mock implementation for SherpaOnnx to reduce resource usage."
+  export USE_SHERPAONNX_MOCK=true
 
   # Set environment variables
   export LD_LIBRARY_PATH="$SHERPA_DIR:$LD_LIBRARY_PATH"

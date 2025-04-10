@@ -38,10 +38,9 @@ This document provides instructions for deploying the JS TTS Demo application to
    - The SherpaOnnx server runs alongside the Next.js application
    - It listens on port 3002 (set by the SHERPAONNX_PORT environment variable)
    - The Next.js application communicates with the SherpaOnnx server via HTTP
-   - The application uses the `sherpa-onnx-node` package, which automatically detects the platform and architecture
-   - The SherpaOnnx server will check if the required libraries are available
-   - If the required libraries are not found, it will fall back to a mock implementation
+   - On Digital Ocean App Platform, the SherpaOnnx server always uses the mock implementation to reduce resource usage
    - The mock implementation returns a small set of sample voices for testing purposes
+   - For production use with the real SherpaOnnx implementation, you may need to deploy to a server with more resources
 
 6. **Troubleshooting**
    - If you encounter build errors, check the build logs for details
@@ -50,6 +49,7 @@ This document provides instructions for deploying the JS TTS Demo application to
    - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm
    - If the Next.js application is running on the wrong port, check the Procfile and make sure the PORT environment variable is set to 8080
    - If you see health check errors like "Readiness probe failed: dial tcp 10.244.12.35:8080: connect: connection refused", make sure the health check port is set to 8080 in the App Platform settings
+   - If you see 504 Gateway Timeout errors, it might be due to resource limits. Try upgrading your Digital Ocean App Platform plan or reducing resource usage by using the mock implementation for SherpaOnnx
 
 ## Deploying to a Digital Ocean Droplet
 

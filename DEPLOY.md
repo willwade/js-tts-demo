@@ -17,9 +17,9 @@ This document provides instructions for deploying the JS TTS Demo application to
    - The run command should be automatically set to `pnpm start:do:with-sherpa` from the Procfile
    - Make sure to set the Node.js version to 18.x or later
    - Make sure to select pnpm as the package manager
-   - Set the HTTP port to 3000 in the App Platform settings
-   - Set the health check path to `/` and port to 3000
-   - Alternatively, use the `.do/app.yaml` file included in the repository
+   - The HTTP port is automatically set to 8080 in the Procfile
+   - The health check path should be set to `/` and port to 8080
+   - Do not change the HTTP port in the App Platform settings
 
 3. **Deploy the App**
    - Click "Next" and review your settings
@@ -47,8 +47,8 @@ This document provides instructions for deploying the JS TTS Demo application to
    - If you see TypeScript errors, you may need to update the error handling in the code
    - If the SherpaOnnx server is not starting, check the logs for environment variable issues
    - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm
-   - If the Next.js application is running on the wrong port, check the App Platform settings and make sure the HTTP port is set to 3000
-   - If you see health check errors like "Readiness probe failed: dial tcp 10.244.12.35:8080: connect: connection refused", make sure the health check port is set to 3000 in the App Platform settings or use the `.do/app.yaml` file
+   - If the Next.js application is running on the wrong port, check the Procfile and make sure the PORT environment variable is set to 8080
+   - If you see health check errors like "Readiness probe failed: dial tcp 10.244.12.35:8080: connect: connection refused", make sure the health check port is set to 8080 in the App Platform settings
 
 ## Deploying to a Digital Ocean Droplet
 

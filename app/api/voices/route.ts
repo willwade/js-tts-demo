@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
             { status: 401 }
           );
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error checking credentials for ${engine} TTS engine:`, error);
 
         // For SherpaOnnx, we want to continue even if credentials check fails
@@ -117,15 +117,15 @@ export async function GET(request: NextRequest) {
           console.log('SherpaOnnx model files not available. Using mock implementation for example.');
         } else {
           return NextResponse.json(
-            { error: `Error checking credentials for ${engine} TTS engine: ${error.message}` },
+            { error: `Error checking credentials for ${engine} TTS engine: ${error?.message || 'Unknown error'}` },
             { status: 500 }
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error creating ${engine} TTS client:`, error);
       return NextResponse.json(
-        { error: `Failed to initialize ${engine} TTS engine` },
+        { error: `Failed to initialize ${engine} TTS engine: ${error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(transformedVoices);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching voices:", error);
     return NextResponse.json(
       { error: "Failed to fetch voices: " + (error instanceof Error ? error.message : String(error)) },

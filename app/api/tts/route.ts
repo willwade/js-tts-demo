@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
               try {
                 const errorData = await response.json();
                 errorMessage = errorData.error || errorMessage;
-              } catch (e) {
+              } catch (e: any) {
                 // If the response is not JSON, use the status text
                 errorMessage = `Failed to synthesize speech with SherpaOnnx: ${response.statusText}`;
               }
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
                 'Content-Length': audioBuffer.byteLength.toString(),
               },
             });
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error proxying to SherpaOnnx API:', error);
             return NextResponse.json(
-              { error: `Failed to synthesize speech with SherpaOnnx: ${error.message}` },
+              { error: `Failed to synthesize speech with SherpaOnnx: ${error?.message || 'Unknown error'}` },
               { status: 500 }
             );
           }
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         "Content-Disposition": `attachment; filename="tts-output.${audioFormat}"`
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error processing TTS request:", error);
     return NextResponse.json(
       { error: "Failed to process TTS request: " + (error instanceof Error ? error.message : String(error)) },

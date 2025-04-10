@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get the engine from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const engine = searchParams.get("engine");
+    const engine = searchParams.get("engine") as "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx";
 
     if (!engine) {
       return NextResponse.json({ error: "Missing engine parameter" }, { status: 400 });
@@ -87,10 +87,10 @@ export async function GET(request: NextRequest) {
             const voices = await response.json();
             console.log(`SherpaOnnx API returned ${voices.length} voices. First voice:`, voices[0]);
             return NextResponse.json(voices);
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error proxying to SherpaOnnx API:', error);
             return NextResponse.json(
-              { error: `Failed to get SherpaOnnx voices: ${error.message}` },
+              { error: `Failed to get SherpaOnnx voices: ${error?.message || 'Unknown error'}` },
               { status: 500 }
             );
           }
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
         console.error(`Error checking credentials for ${engine} TTS engine:`, error);
 
         // For SherpaOnnx, we want to continue even if credentials check fails
-        if (engine === 'sherpaonnx') {
+        if ((engine as string) === 'sherpaonnx') {
           console.log('SherpaOnnx model files not available. Using mock implementation for example.');
         } else {
           return NextResponse.json(

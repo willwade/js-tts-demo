@@ -4,7 +4,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 // Define types for TTS engines
-export type TTSEngine = "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx"
+export type TTSEngine = "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx" | "sherpaonnx-wasm" | "espeak" | "espeak-wasm" | "watson" | "witai" | "mock"
 
 export interface Voice {
   id: string
@@ -45,6 +45,27 @@ export interface TTSCredentials {
     enabled: boolean
   }
   sherpaonnx: {
+    enabled: boolean
+  }
+  "sherpaonnx-wasm": {
+    enabled: boolean
+  }
+  espeak: {
+    enabled: boolean
+  }
+  "espeak-wasm": {
+    enabled: boolean
+  }
+  watson: {
+    apiKey: string
+    url: string
+    enabled: boolean
+  }
+  witai: {
+    token: string
+    enabled: boolean
+  }
+  mock: {
     enabled: boolean
   }
 }
@@ -105,6 +126,27 @@ export const useTTSStore = create<TTSState>()(
           enabled: true,
         },
         sherpaonnx: {
+          enabled: true,
+        },
+        "sherpaonnx-wasm": {
+          enabled: true,
+        },
+        espeak: {
+          enabled: true,
+        },
+        "espeak-wasm": {
+          enabled: true,
+        },
+        watson: {
+          apiKey: "",
+          url: "",
+          enabled: true,
+        },
+        witai: {
+          token: "",
+          enabled: true,
+        },
+        mock: {
           enabled: true,
         },
       },

@@ -1,21 +1,86 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from 'fs';
+import path from 'path';
 
-// Import each client individually to avoid importing SherpaOnnx
-import { AzureTTSClient } from "js-tts-wrapper/engines/azure";
-import { ElevenLabsTTSClient } from "js-tts-wrapper/engines/elevenlabs";
-import { GoogleTTSClient } from "js-tts-wrapper/engines/google";
-import { OpenAITTSClient } from "js-tts-wrapper/engines/openai";
-import { PlayHTTTSClient } from "js-tts-wrapper/engines/playht";
-import { PollyTTSClient } from "js-tts-wrapper/engines/polly";
+// Import TTS clients using the new unified structure
+import {
+  AzureTTSClient,
+  ElevenLabsTTSClient,
+  GoogleTTSClient,
+  OpenAITTSClient,
+  PlayHTTTSClient,
+  PollyTTSClient,
+  SherpaOnnxTTSClient,
+  SherpaOnnxWasmTTSClient,
+  EspeakTTSClient,
+  EspeakWasmTTSClient,
+  WatsonTTSClient,
+  WitAITTSClient
+} from "js-tts-wrapper";
+
+// Mock TTS Client for testing (create a simple mock implementation)
+class MockTTSClient {
+  async checkCredentials() {
+    return true;
+  }
+
+  async getVoices() {
+    return [
+      {
+        id: 'mock-voice-1',
+        name: 'Mock Voice 1',
+        languageCodes: [{ bcp47: 'en-US', display: 'English (US)' }],
+        gender: 'FEMALE'
+      },
+      {
+        id: 'mock-voice-2',
+        name: 'Mock Voice 2',
+        languageCodes: [{ bcp47: 'en-GB', display: 'English (UK)' }],
+        gender: 'MALE'
+      }
+    ];
+  }
+
+  setVoice(voiceId: string) {
+    // Mock implementation
+  }
+
+  setProperty(property: string, value: any) {
+    // Mock implementation
+  }
+
+  async synthToBytes(text: string, options?: any) {
+    // Generate a simple sine wave as mock audio
+    const sampleRate = 22050;
+    const duration = 2; // seconds
+    const numSamples = sampleRate * duration;
+    const audioData = new Float32Array(numSamples);
+
+    // Generate a simple sine wave
+    const frequency = 440; // A4 note
+    for (let i = 0; i < numSamples; i++) {
+      audioData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+    }
+
+    // Convert to bytes (simplified)
+    return new Uint8Array(audioData.buffer);
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     // Get the engine from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const engine = searchParams.get("engine") as "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx";
+    const engine = searchParams.get("engine") as "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx" | "sherpaonnx-wasm" | "espeak" | "espeak-wasm" | "watson" | "witai" | "mock";
+    const enabled = searchParams.get("enabled");
 
     if (!engine) {
       return NextResponse.json({ error: "Missing engine parameter" }, { status: 400 });
+    }
+
+    // If the engine is disabled, return an empty array
+    if (enabled === "false") {
+      return NextResponse.json([]);
     }
 
     // Create the appropriate TTS client based on the engine
@@ -63,37 +128,41 @@ export async function GET(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
-          try {
-            // Make a request to the standalone SherpaOnnx server
-            const response = await fetch(`http://localhost:${process.env.SHERPAONNX_PORT || 3002}/voices`);
+          client = new SherpaOnnxTTSClient({
+            noDefaultDownload: true,
+            modelPath: process.env.SHERPAONNX_MODEL_PATH || null
+          });
+          break;
 
-            if (!response.ok) {
-              let errorMessage = 'Failed to get SherpaOnnx voices';
-              try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-              } catch (e) {
-                // If the response is not JSON, use the status text
-                errorMessage = `Failed to get SherpaOnnx voices: ${response.statusText}`;
-              }
-              return NextResponse.json(
-                { error: errorMessage },
-                { status: response.status }
-              );
-            }
+        case "sherpaonnx-wasm":
+          client = new SherpaOnnxWasmTTSClient({
+            wasmPath: process.env.SHERPAONNX_WASM_PATH || null
+          });
+          break;
 
-            // Return the voices directly
-            const voices = await response.json();
-            console.log(`SherpaOnnx API returned ${voices.length} voices. First voice:`, voices[0]);
-            return NextResponse.json(voices);
-          } catch (error: any) {
-            console.error('Error proxying to SherpaOnnx API:', error);
-            return NextResponse.json(
-              { error: `Failed to get SherpaOnnx voices: ${error?.message || 'Unknown error'}` },
-              { status: 500 }
-            );
-          }
+        case "espeak":
+          client = new EspeakTTSClient();
+          break;
+
+        case "espeak-wasm":
+          client = new EspeakWasmTTSClient();
+          break;
+
+        case "watson":
+          client = new WatsonTTSClient({
+            apikey: process.env.WATSON_API_KEY || "",
+            url: process.env.WATSON_URL || "",
+          });
+          break;
+
+        case "witai":
+          client = new WitAITTSClient({
+            token: process.env.WITAI_TOKEN || "",
+          });
+          break;
+
+        case "mock":
+          client = new MockTTSClient();
           break;
 
         default:

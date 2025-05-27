@@ -1,12 +1,116 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-// Import each client individually to avoid importing SherpaOnnx
-import { AzureTTSClient } from "js-tts-wrapper/engines/azure";
-import { ElevenLabsTTSClient } from "js-tts-wrapper/engines/elevenlabs";
-import { GoogleTTSClient } from "js-tts-wrapper/engines/google";
-import { OpenAITTSClient } from "js-tts-wrapper/engines/openai";
-import { PlayHTTTSClient } from "js-tts-wrapper/engines/playht";
-import { PollyTTSClient } from "js-tts-wrapper/engines/polly";
+// Import TTS clients using the new unified structure
+import {
+  AzureTTSClient,
+  ElevenLabsTTSClient,
+  GoogleTTSClient,
+  OpenAITTSClient,
+  PlayHTTTSClient,
+  PollyTTSClient,
+  SherpaOnnxTTSClient,
+  SherpaOnnxWasmTTSClient,
+  EspeakTTSClient,
+  EspeakWasmTTSClient,
+  WatsonTTSClient,
+  WitAITTSClient
+} from "js-tts-wrapper";
+
+// Mock TTS Client for testing (create a simple mock implementation)
+class MockTTSClient {
+  async checkCredentials() {
+    return true;
+  }
+
+  async getVoices() {
+    return [
+      {
+        id: 'mock-voice-1',
+        name: 'Mock Voice 1',
+        languageCodes: [{ bcp47: 'en-US', display: 'English (US)' }],
+        gender: 'FEMALE'
+      },
+      {
+        id: 'mock-voice-2',
+        name: 'Mock Voice 2',
+        languageCodes: [{ bcp47: 'en-GB', display: 'English (UK)' }],
+        gender: 'MALE'
+      }
+    ];
+  }
+
+  setVoice(voiceId: string) {
+    // Mock implementation
+  }
+
+  setProperty(property: string, value: any) {
+    // Mock implementation
+  }
+
+  async synthToBytes(text: string, options?: any) {
+    // Generate a simple sine wave as mock audio
+    const sampleRate = 22050;
+    const duration = 2; // seconds
+    const numSamples = sampleRate * duration;
+    const audioData = new Float32Array(numSamples);
+
+    // Generate a simple sine wave
+    const frequency = 440; // A4 note
+    for (let i = 0; i < numSamples; i++) {
+      audioData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+    }
+
+    // Convert to bytes (simplified)
+    return new Uint8Array(audioData.buffer);
+  }
+}
+
+/**
+ * Convert a Float32Array to WAV format
+ */
+function float32ArrayToWav(samples: Float32Array, sampleRate: number): ArrayBuffer {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  // Write WAV header
+  // "RIFF" chunk descriptor
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(view, 8, 'WAVE');
+
+  // "fmt " sub-chunk
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // subchunk1Size
+  view.setUint16(20, 1, true); // audioFormat (PCM)
+  view.setUint16(22, 1, true); // numChannels
+  view.setUint32(24, sampleRate, true); // sampleRate
+  view.setUint32(28, sampleRate * 2, true); // byteRate
+  view.setUint16(32, 2, true); // blockAlign
+  view.setUint16(34, 16, true); // bitsPerSample
+
+  // "data" sub-chunk
+  writeString(view, 36, 'data');
+  view.setUint32(40, samples.length * 2, true); // subchunk2Size
+
+  // Write audio data
+  const volume = 0.5;
+  for (let i = 0; i < samples.length; i++) {
+    const sample = Math.max(-1, Math.min(1, samples[i])) * volume;
+    const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+    view.setInt16(44 + i * 2, int16, true);
+  }
+
+  return buffer;
+}
+
+/**
+ * Helper method to write a string to a DataView
+ */
+function writeString(view: DataView, offset: number, string: string): void {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,49 +166,41 @@ export async function POST(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          // For SherpaOnnx, we'll proxy the request to the dedicated SherpaOnnx API route
-          try {
-            // Make a request to the standalone SherpaOnnx server
-            const response = await fetch(`http://localhost:${process.env.SHERPAONNX_PORT || 3002}/tts`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ text, voiceId, options }),
-            });
+          client = new SherpaOnnxTTSClient({
+            noDefaultDownload: true,
+            modelPath: process.env.SHERPAONNX_MODEL_PATH || null
+          });
+          break;
 
-            if (!response.ok) {
-              let errorMessage = 'Failed to synthesize speech with SherpaOnnx';
-              try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-              } catch (e: any) {
-                // If the response is not JSON, use the status text
-                errorMessage = `Failed to synthesize speech with SherpaOnnx: ${response.statusText}`;
-              }
-              return NextResponse.json(
-                { error: errorMessage },
-                { status: response.status }
-              );
-            }
+        case "sherpaonnx-wasm":
+          client = new SherpaOnnxWasmTTSClient({
+            wasmPath: process.env.SHERPAONNX_WASM_PATH || null
+          });
+          break;
 
-            // Get the audio buffer from the response
-            const audioBuffer = await response.arrayBuffer();
+        case "espeak":
+          client = new EspeakTTSClient();
+          break;
 
-            // Return the audio as a response
-            return new NextResponse(audioBuffer, {
-              headers: {
-                'Content-Type': 'audio/wav',
-                'Content-Length': audioBuffer.byteLength.toString(),
-              },
-            });
-          } catch (error: any) {
-            console.error('Error proxying to SherpaOnnx API:', error);
-            return NextResponse.json(
-              { error: `Failed to synthesize speech with SherpaOnnx: ${error?.message || 'Unknown error'}` },
-              { status: 500 }
-            );
-          }
+        case "espeak-wasm":
+          client = new EspeakWasmTTSClient();
+          break;
+
+        case "watson":
+          client = new WatsonTTSClient({
+            apikey: process.env.WATSON_API_KEY || "",
+            url: process.env.WATSON_URL || "",
+          });
+          break;
+
+        case "witai":
+          client = new WitAITTSClient({
+            token: process.env.WITAI_TOKEN || "",
+          });
+          break;
+
+        case "mock":
+          client = new MockTTSClient();
           break;
 
         default:

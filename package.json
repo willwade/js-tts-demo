@@ -15,7 +15,11 @@
     "lint": "next lint",
     "sherpa-server": "node sherpa-server.js",
     "sherpa-server:env": "bash scripts/run-sherpa-server.sh",
-    "dev:with-sherpa": "concurrently \"pnpm sherpa-server:env\" \"pnpm dev\""
+    "dev:with-sherpa": "concurrently \"pnpm sherpa-server:env\" \"pnpm dev\"",
+    "wasm-server": "cd wasm-server && node server.js",
+    "wasm-server:dev": "cd wasm-server && nodemon server.js",
+    "dev:with-wasm": "concurrently \"pnpm wasm-server:dev\" \"pnpm dev\"",
+    "dev:full": "concurrently \"pnpm sherpa-server:env\" \"pnpm wasm-server:dev\" \"pnpm dev\""
   },
   "dependencies": {
     "@aws-sdk/client-polly": "^3.782.0",
@@ -63,7 +67,7 @@
     "express": "^5.1.0",
     "immer": "latest",
     "input-otp": "1.4.1",
-    "js-tts-wrapper": "^0.1.5",
+    "js-tts-wrapper": "^0.1.19",
     "lucide-react": "^0.454.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.43.1",
     "next": "15.2.4",

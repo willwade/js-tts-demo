@@ -8,7 +8,10 @@ export default function Home() {
   return (
     <main className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">TTS Client Demo</h1>
+        <div>
+          <h1 className="text-3xl font-bold">TTS Client Demo</h1>
+          <p className="text-sm text-muted-foreground">Now with SherpaOnnx WebAssembly TTS for browser-based speech synthesis!</p>
+        </div>
         <ModeToggle />
       </div>
 

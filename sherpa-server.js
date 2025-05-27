@@ -15,30 +15,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Import the SherpaOnnxTTSClient from js-tts-wrapper
-let SherpaOnnxTTSClient;
-
 // Check if we should use the mock implementation
-// For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
+// Allow forcing real implementation even on Digital Ocean with environment variable
 const useMock = process.env.USE_SHERPAONNX_MOCK === 'true';
+const forceReal = process.env.FORCE_SHERPAONNX_REAL === 'true';
 
-if (useMock) {
-  console.log('Using mock implementation for SherpaOnnx (as specified by environment variable)');
-} else {
-  try {
-    // Try to dynamically import the SherpaOnnxTTSClient
-    SherpaOnnxTTSClient = require('js-tts-wrapper').SherpaOnnxTTSClient;
-    console.log('Successfully imported SherpaOnnxTTSClient from js-tts-wrapper');
-  } catch (error) {
-    console.error('Failed to import SherpaOnnxTTSClient from js-tts-wrapper:', error.message);
-    console.log('Using mock implementation for SherpaOnnx due to import failure');
-  }
-}
+// The actual import and initialization will be handled in the initializeSherpaOnnxClient function
 
 // Define the mock implementation
-if (!SherpaOnnxTTSClient || useMock) {
-  // Mock SherpaOnnxTTSClient class
-  SherpaOnnxTTSClient = class MockSherpaOnnxTTSClient {
+// This will be used as a fallback if the real implementation fails to load
+class MockSherpaOnnxTTSClient {
     constructor(config) {
       this.config = config || {};
       console.log('Created MockSherpaOnnxTTSClient with config:', this.config);
@@ -105,15 +91,57 @@ if (!SherpaOnnxTTSClient || useMock) {
       // Combine header and audio data
       return Buffer.concat([header, audio]);
     }
-  };
-}
+  }
 
-// Create a SherpaOnnx client instance
-const sherpaOnnxClient = new SherpaOnnxTTSClient({});
+// Global variable to hold the initialized client
+let sherpaOnnxClient = null;
+
+// Async function to initialize SherpaOnnx client
+async function initializeSherpaOnnxClient() {
+  if (useMock && !forceReal) {
+    console.log('Using mock implementation for SherpaOnnx (as specified by environment variable)');
+    sherpaOnnxClient = new MockSherpaOnnxTTSClient({});
+    return;
+  }
+
+  try {
+    // Try to dynamically import the SherpaOnnxTTSClient
+    let ImportedSherpaOnnxTTSClient;
+    try {
+      // First try CommonJS require
+      const wrapper = require('js-tts-wrapper');
+      ImportedSherpaOnnxTTSClient = wrapper.SherpaOnnxTTSClient;
+      console.log('Successfully imported SherpaOnnxTTSClient via CommonJS require');
+    } catch (requireError) {
+      console.log('CommonJS require failed, trying dynamic import...');
+      // If require fails, try dynamic import for ES modules
+      const wrapper = await import('js-tts-wrapper');
+      ImportedSherpaOnnxTTSClient = wrapper.SherpaOnnxTTSClient;
+      console.log('Successfully imported SherpaOnnxTTSClient via dynamic import');
+    }
+
+    if (ImportedSherpaOnnxTTSClient) {
+      sherpaOnnxClient = new ImportedSherpaOnnxTTSClient({});
+      console.log('Successfully created real SherpaOnnxTTSClient instance');
+    } else {
+      throw new Error('SherpaOnnxTTSClient not found in js-tts-wrapper');
+    }
+  } catch (error) {
+    console.error('Failed to import SherpaOnnxTTSClient from js-tts-wrapper:', error.message);
+    console.log('Using mock implementation for SherpaOnnx due to import failure');
+    sherpaOnnxClient = new MockSherpaOnnxTTSClient({});
+  }
+}
 
 // Define routes
 app.get('/voices', async (_req, res) => {
   console.log('GET /voices');
+
+  // Ensure client is initialized
+  if (!sherpaOnnxClient) {
+    console.error('SherpaOnnx client not initialized');
+    return res.status(500).json({ error: 'SherpaOnnx client not initialized' });
+  }
 
   try {
     // Use the SherpaOnnxTTSClient to get the voices
@@ -152,6 +180,12 @@ app.get('/voices', async (_req, res) => {
 app.post('/tts', async (req, res) => {
   console.log('POST /tts');
 
+  // Ensure client is initialized
+  if (!sherpaOnnxClient) {
+    console.error('SherpaOnnx client not initialized');
+    return res.status(500).json({ error: 'SherpaOnnx client not initialized' });
+  }
+
   const { text, voiceId, options = {} } = req.body;
 
   if (!text) {
@@ -186,6 +220,19 @@ app.post('/tts', async (req, res) => {
 
 // Start the server
 const PORT = process.env.SHERPAONNX_PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`SherpaOnnx server listening on port ${PORT}`);
+
+// Initialize the SherpaOnnx client and start the server
+async function startServer() {
+  console.log('Initializing SherpaOnnx client...');
+  await initializeSherpaOnnxClient();
+
+  app.listen(PORT, () => {
+    console.log(`SherpaOnnx server listening on port ${PORT}`);
+  });
+}
+
+// Start the server
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });

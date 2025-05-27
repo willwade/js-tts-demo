@@ -38,14 +38,18 @@ This document provides instructions for deploying the JS TTS Demo application to
    - The SherpaOnnx server runs alongside the Next.js application
    - It listens on port 3002 (set by the SHERPAONNX_PORT environment variable)
    - The Next.js application communicates with the SherpaOnnx server via HTTP
-   - On Digital Ocean App Platform, the SherpaOnnx server always uses the mock implementation to reduce resource usage
-   - The mock implementation returns a small set of sample voices for testing purposes
-   - For production use with the real SherpaOnnx implementation, you may need to deploy to a server with more resources
+   - The build script automatically installs platform-specific SherpaOnnx dependencies
+   - If the real SherpaOnnx implementation fails to load, it automatically falls back to a mock implementation
+   - To force the use of the real SherpaOnnx implementation on DigitalOcean, set the environment variable `FORCE_SHERPAONNX_REAL=true`
+   - To force the use of the mock implementation, set the environment variable `USE_SHERPAONNX_MOCK=true`
 
 6. **Troubleshooting**
    - If you encounter build errors, check the build logs for details
    - If you see TypeScript errors, you may need to update the error handling in the code
    - If the SherpaOnnx server is not starting, check the logs for environment variable issues
+   - If you see "Cannot use 'import.meta' outside a module" errors, the server will automatically fall back to mock implementation
+   - If you see "Could not find sherpa-onnx-node" errors, the build script should install the platform-specific package automatically
+   - If SherpaOnnx is using mock implementation when you want the real one, set `FORCE_SHERPAONNX_REAL=true` environment variable
    - If you encounter npm dependency resolution errors (like "Cannot read properties of null (reading 'matches')"), make sure to use pnpm instead of npm
    - If the Next.js application is running on the wrong port, check the Procfile and make sure the PORT environment variable is set to 8080
    - If you see health check errors like "Readiness probe failed: dial tcp 10.244.12.35:8080: connect: connection refused", make sure the health check port is set to 8080 in the App Platform settings
@@ -74,13 +78,13 @@ Alternatively, you can deploy the application to a Digital Ocean droplet.
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Build the application**
 
    ```bash
-   npm run build:do:with-sherpa
+   pnpm run build:do:with-sherpa
    ```
 
 4. **Set up the systemd service**
@@ -180,10 +184,16 @@ If you encounter any issues, check the logs:
 sudo journalctl -u js-tts-demo
 ```
 
-If the SherpaOnnx server is not working correctly, check if the required libraries are installed:
+If the SherpaOnnx server is not working correctly, run the dependency installation script:
 
 ```bash
-npm install sherpa-onnx-node@^1.11.3 sherpa-onnx-linux-x64@^1.11.3
+bash scripts/install-sherpa-deps.sh
+```
+
+Or manually install the required libraries:
+
+```bash
+pnpm add sherpa-onnx-node@^1.11.3 sherpa-onnx-linux-x64@^1.11.3
 ```
 
 Make sure the models directory exists:
@@ -206,13 +216,13 @@ To update the application:
 2. Install dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Build the application:
 
    ```bash
-   npm run build:do:with-sherpa
+   pnpm run build:do:with-sherpa
    ```
 
 4. Restart the service:

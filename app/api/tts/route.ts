@@ -166,11 +166,39 @@ export async function POST(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          client = new SherpaOnnxTTSClient({
-            noDefaultDownload: true,
-            modelPath: process.env.SHERPAONNX_MODEL_PATH || null
-          });
-          break;
+          // Use the dedicated SherpaOnnx server instead of direct client
+          try {
+            const sherpaPort = process.env.SHERPAONNX_PORT || 3002;
+            const response = await fetch(`http://localhost:${sherpaPort}/tts`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                text,
+                voiceId,
+                options: {}
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error(`SherpaOnnx server responded with status ${response.status}`);
+            }
+
+            const audioBuffer = await response.arrayBuffer();
+            return new NextResponse(audioBuffer, {
+              headers: {
+                'Content-Type': 'audio/wav',
+                'Content-Length': audioBuffer.byteLength.toString(),
+              },
+            });
+          } catch (error: any) {
+            console.error('Error synthesizing speech with SherpaOnnx server:', error);
+            return NextResponse.json(
+              { error: `Failed to synthesize speech with SherpaOnnx: ${error?.message || 'Unknown error'}` },
+              { status: 500 }
+            );
+          }
 
         case "sherpaonnx-wasm":
           client = new SherpaOnnxWasmTTSClient({

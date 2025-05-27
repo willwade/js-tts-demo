@@ -128,11 +128,22 @@ export async function GET(request: NextRequest) {
           break;
 
         case "sherpaonnx":
-          client = new SherpaOnnxTTSClient({
-            noDefaultDownload: true,
-            modelPath: process.env.SHERPAONNX_MODEL_PATH || null
-          });
-          break;
+          // Use the dedicated SherpaOnnx server instead of direct client
+          try {
+            const sherpaPort = process.env.SHERPAONNX_PORT || 3002;
+            const response = await fetch(`http://localhost:${sherpaPort}/voices`);
+            if (!response.ok) {
+              throw new Error(`SherpaOnnx server responded with status ${response.status}`);
+            }
+            const voices = await response.json();
+            return NextResponse.json(voices);
+          } catch (error: any) {
+            console.error('Error fetching voices from SherpaOnnx server:', error);
+            return NextResponse.json(
+              { error: `Failed to fetch SherpaOnnx voices: ${error?.message || 'Unknown error'}` },
+              { status: 500 }
+            );
+          }
 
         case "sherpaonnx-wasm":
           client = new SherpaOnnxWasmTTSClient({

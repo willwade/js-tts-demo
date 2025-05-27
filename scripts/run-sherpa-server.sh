@@ -16,9 +16,12 @@ if [ "$PLATFORM" = "Darwin" ]; then
   # We just need to set the DYLD_LIBRARY_PATH to the correct location
   SHERPA_DIR="$PWD/node_modules/sherpa-onnx-darwin-$ARCH"
 
-  # For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
-  echo "Using mock implementation for SherpaOnnx to reduce resource usage."
-  export USE_SHERPAONNX_MOCK=true
+  # Check if we should use mock implementation (can be overridden by environment variable)
+  if [ "$USE_SHERPAONNX_MOCK" = "true" ]; then
+    echo "Using mock implementation for SherpaOnnx (as specified by environment variable)."
+  else
+    echo "Attempting to use real SherpaOnnx implementation."
+  fi
 
   # Set environment variables
   export DYLD_LIBRARY_PATH="$SHERPA_DIR:$DYLD_LIBRARY_PATH"
@@ -45,9 +48,12 @@ elif [ "$PLATFORM" = "Linux" ]; then
     SHERPA_DIR="$PWD/node_modules/sherpa-onnx-linux-$ARCH"
   fi
 
-  # For Digital Ocean App Platform, always use the mock implementation to reduce resource usage
-  echo "Using mock implementation for SherpaOnnx to reduce resource usage."
-  export USE_SHERPAONNX_MOCK=true
+  # Check if we should use mock implementation (can be overridden by environment variable)
+  if [ "$USE_SHERPAONNX_MOCK" = "true" ]; then
+    echo "Using mock implementation for SherpaOnnx (as specified by environment variable)."
+  else
+    echo "Attempting to use real SherpaOnnx implementation."
+  fi
 
   # Set environment variables
   export LD_LIBRARY_PATH="$SHERPA_DIR:$LD_LIBRARY_PATH"

@@ -10,7 +10,29 @@ const path = require('path');
 const fs = require('fs');
 
 // Import the SherpaOnnxWasmTTSClient from js-tts-wrapper
-const { SherpaOnnxWasmTTSClient } = require('js-tts-wrapper');
+// Note: SherpaOnnxWasmTTSClient is designed for browser environments
+// For the server, we'll create a simple mock implementation
+let SherpaOnnxWasmTTSClient;
+
+try {
+  // Try to import, but expect it might fail in Node.js environment
+  const wrapper = require('js-tts-wrapper');
+  SherpaOnnxWasmTTSClient = wrapper.SherpaOnnxWasmTTSClient;
+} catch (error) {
+  console.log('Note: SherpaOnnxWasmTTSClient not available in Node.js environment (this is expected)');
+  console.log('Using mock implementation for WASM server');
+
+  // Create a mock implementation for the server
+  SherpaOnnxWasmTTSClient = class MockSherpaOnnxWasmTTSClient {
+    constructor(config) {
+      this.config = config || {};
+    }
+
+    async getVoices() {
+      return [];
+    }
+  };
+}
 
 // Create Express app
 const app = express();

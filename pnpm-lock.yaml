@@ -144,8 +144,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(react-dom@18.3.1)(react@18.3.1)
       js-tts-wrapper:
-        specifier: ^0.1.20
-        version: 0.1.20(@aws-sdk/client-polly@3.817.0)(@google-cloud/text-to-speech@6.1.0)(decompress-bzip2@4.0.0)(decompress-tarbz2@4.1.1)(decompress-targz@4.1.1)(decompress@4.2.1)(microsoft-cognitiveservices-speech-sdk@1.44.0)(openai@4.103.0)(sherpa-onnx-node@1.12.0)(tar-stream@3.1.7)
+        specifier: ^0.1.22
+        version: 0.1.22(@aws-sdk/client-polly@3.817.0)(@google-cloud/text-to-speech@6.1.0)(decompress-bzip2@4.0.0)(decompress-tarbz2@4.1.1)(decompress-targz@4.1.1)(decompress@4.2.1)(microsoft-cognitiveservices-speech-sdk@1.44.0)(openai@4.103.0)(sherpa-onnx-node@1.12.0)(tar-stream@3.1.7)
       lucide-react:
         specifier: ^0.454.0
         version: 0.454.0(react@18.3.1)
@@ -183,7 +183,7 @@ importers:
         specifier: 2.15.0
         version: 2.15.0(react-dom@18.3.1)(react@18.3.1)
       sherpa-onnx-node:
-        specifier: ^1.11.3
+        specifier: ^1.12.0
         version: 1.12.0
       sonner:
         specifier: ^1.7.1
@@ -2834,6 +2834,12 @@ packages:
     dependencies:
       undici-types: 6.21.0
 
+  /@types/node@22.15.22:
+    resolution: {integrity: sha512-IZ8lyY8xikZwGTJ9tsmbE68+mZbx2tsR+WnN1ZJU/h5flim8xBxEbpDrouMQNkMeT4pYxyJOTkf7YyDcQaUvQw==}
+    dependencies:
+      undici-types: 6.21.0
+    dev: true
+
   /@types/react-dom@19.1.5(@types/react@19.1.6):
     resolution: {integrity: sha512-CMCjrWucUBZvohgZxkjd6S9h0nZxXjzus6yDfUb+xLxYM7VvjKNH1tQrE9GWLql1XoOP4/Ds3bwFqShHUYraGg==}
     peerDependencies:
@@ -4531,7 +4537,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 22.15.21
+      '@types/node': 22.15.22
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
@@ -4549,8 +4555,8 @@ packages:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
     dev: false
 
-  /js-tts-wrapper@0.1.20(@aws-sdk/client-polly@3.817.0)(@google-cloud/text-to-speech@6.1.0)(decompress-bzip2@4.0.0)(decompress-tarbz2@4.1.1)(decompress-targz@4.1.1)(decompress@4.2.1)(microsoft-cognitiveservices-speech-sdk@1.44.0)(openai@4.103.0)(sherpa-onnx-node@1.12.0)(tar-stream@3.1.7):
-    resolution: {integrity: sha512-kLsbRALsDjJYcYtpQs+8hh87jkOcqDt7XRzoxXbl0i5VpG0/NqFvOKi9ykiggtizsMdJRp1JW0E4w3A3H84t3A==}
+  /js-tts-wrapper@0.1.22(@aws-sdk/client-polly@3.817.0)(@google-cloud/text-to-speech@6.1.0)(decompress-bzip2@4.0.0)(decompress-tarbz2@4.1.1)(decompress-targz@4.1.1)(decompress@4.2.1)(microsoft-cognitiveservices-speech-sdk@1.44.0)(openai@4.103.0)(sherpa-onnx-node@1.12.0)(tar-stream@3.1.7):
+    resolution: {integrity: sha512-ttpsgIzqEGRItu2m0btqHOTuzYIpB4veIWJdB4W4WMa8UHW47p9LvYNZEvEsbcG4e2NkzvB/OH5eK7xPPOIYyA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@aws-sdk/client-polly': ^3.799.0
@@ -6027,12 +6033,12 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 4.3.2
       serialize-javascript: 6.0.2
-      terser: 5.39.2
+      terser: 5.40.0
       webpack: 5.99.9
     dev: true
 
-  /terser@5.39.2:
-    resolution: {integrity: sha512-yEPUmWve+VA78bI71BW70Dh0TuV4HHd+I5SHOAfS1+QBOmvmCiiffgjR8ryyEd3KIfvPGFqoADt8LdQ6XpXIvg==}
+  /terser@5.40.0:
+    resolution: {integrity: sha512-cfeKl/jjwSR5ar7d0FGmave9hFGJT8obyo0z+CrQOylLDbk7X81nPU6vq9VORa5jU30SkDnT2FXjLbR8HLP+xA==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:

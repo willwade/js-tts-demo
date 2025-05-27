@@ -93,7 +93,18 @@ app.post('/tts', async (req, res) => {
   try {
     console.log(`Synthesizing speech: "${text}" using voice ${voiceId}`);
 
-    const audioBuffer = await sherpaOnnxClient.synthesizeSpeech(text, voiceId, options);
+    // Set the voice first
+    sherpaOnnxClient.setVoice(voiceId);
+
+    // Apply any additional options
+    if (options) {
+      if (options.rate) sherpaOnnxClient.setProperty("rate", options.rate);
+      if (options.pitch) sherpaOnnxClient.setProperty("pitch", options.pitch);
+      if (options.volume) sherpaOnnxClient.setProperty("volume", options.volume);
+    }
+
+    // Synthesize the speech using the correct API method
+    const audioBuffer = await sherpaOnnxClient.synthToBytes(text, { format: 'wav' });
 
     console.log(`Generated audio of length ${audioBuffer.length}`);
 

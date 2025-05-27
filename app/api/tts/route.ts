@@ -216,8 +216,10 @@ export async function POST(request: NextRequest) {
 
         case "watson":
           client = new WatsonTTSClient({
-            apikey: process.env.WATSON_API_KEY || "",
+            apiKey: process.env.WATSON_API_KEY || "",
             url: process.env.WATSON_URL || "",
+            region: process.env.WATSON_REGION || "us-south",
+            instanceId: process.env.WATSON_INSTANCE_ID || "",
           });
           break;
 

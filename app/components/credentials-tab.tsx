@@ -60,6 +60,8 @@ export function CredentialsTab() {
     watson: {
       apiKey: '',
       url: '',
+      region: 'us-south',
+      instanceId: '',
     },
     witai: {
       token: '',
@@ -480,6 +482,24 @@ export function CredentialsTab() {
                   placeholder="Enter your Watson service URL"
                   value={credentials.watson.url}
                   onChange={(e) => handleCredentialChange('watson', 'url', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="watson-region">Region</Label>
+                <Input
+                  id="watson-region"
+                  placeholder="Enter your Watson region (e.g., us-south)"
+                  value={credentials.watson.region}
+                  onChange={(e) => handleCredentialChange('watson', 'region', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="watson-instance-id">Instance ID</Label>
+                <Input
+                  id="watson-instance-id"
+                  placeholder="Enter your Watson instance ID"
+                  value={credentials.watson.instanceId}
+                  onChange={(e) => handleCredentialChange('watson', 'instanceId', e.target.value)}
                 />
               </div>
             </div>

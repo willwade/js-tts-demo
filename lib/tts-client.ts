@@ -59,6 +59,8 @@ export interface TTSCredentials {
   watson: {
     apiKey: string
     url: string
+    region: string
+    instanceId: string
     enabled: boolean
   }
   witai: {
@@ -140,6 +142,8 @@ export const useTTSStore = create<TTSState>()(
         watson: {
           apiKey: "",
           url: "",
+          region: "us-south",
+          instanceId: "",
           enabled: true,
         },
         witai: {

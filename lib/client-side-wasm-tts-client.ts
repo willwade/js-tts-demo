@@ -1,10 +1,8 @@
-import { SherpaOnnxWasmTTSClient } from 'js-tts-wrapper';
-
 /**
  * Client-side implementation of SherpaOnnxWasmTTSClient
  * This class checks for available WebAssembly modules and uses them for TTS
  */
-export class ClientSideWasmTTSClient extends SherpaOnnxWasmTTSClient {
+export class ClientSideWasmTTSClient {
   private initialized = false;
   private currentVoice = '';
   private availableVoices: string[] = ['piper_en_US_amy']; // List of voices for which we have WebAssembly modules

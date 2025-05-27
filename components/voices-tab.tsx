@@ -22,6 +22,12 @@ export function VoicesTab() {
     playht: false,
     polly: false,
     sherpaonnx: false,
+    'sherpaonnx-wasm': false,
+    espeak: false,
+    'espeak-wasm': false,
+    watson: false,
+    witai: false,
+    mock: false,
   })
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredVoices, setFilteredVoices] = useState<Voice[]>([])
@@ -194,6 +200,12 @@ export function VoicesTab() {
     playht: filteredVoices.filter((v) => v.engine === "playht"),
     polly: filteredVoices.filter((v) => v.engine === "polly"),
     sherpaonnx: filteredVoices.filter((v) => v.engine === "sherpaonnx"),
+    "sherpaonnx-wasm": filteredVoices.filter((v) => v.engine === "sherpaonnx-wasm"),
+    espeak: filteredVoices.filter((v) => v.engine === "espeak"),
+    "espeak-wasm": filteredVoices.filter((v) => v.engine === "espeak-wasm"),
+    watson: filteredVoices.filter((v) => v.engine === "watson"),
+    witai: filteredVoices.filter((v) => v.engine === "witai"),
+    mock: filteredVoices.filter((v) => v.engine === "mock"),
   }
 
   // Log the number of voices for each engine

@@ -22,8 +22,8 @@
     "dev:full": "concurrently \"pnpm sherpa-server:env\" \"pnpm wasm-server:dev\" \"pnpm dev\""
   },
   "dependencies": {
-    "@aws-sdk/client-polly": "^3.782.0",
-    "@google-cloud/text-to-speech": "^4.2.3",
+    "@aws-sdk/client-polly": "^3.817.0",
+    "@google-cloud/text-to-speech": "^6.1.0",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
@@ -73,7 +73,7 @@
     "next": "15.2.4",
     "next-themes": "latest",
     "node-fetch": "^2.7.0",
-    "openai": "^4.93.0",
+    "openai": "^4.103.0",
     "react": "^18.3.1",
     "react-day-picker": "8.10.1",
     "react-dom": "^18.3.1",

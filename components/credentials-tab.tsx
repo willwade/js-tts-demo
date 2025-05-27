@@ -21,7 +21,13 @@ export function CredentialsTab() {
     openai: false,
     playht: false,
     polly: false,
-    sherpaonnx: false
+    sherpaonnx: false,
+    'sherpaonnx-wasm': false,
+    espeak: false,
+    'espeak-wasm': false,
+    watson: false,
+    witai: false,
+    mock: false
   })
 
   const handleInputChange = (engine: TTSEngine, field: string, value: string) => {

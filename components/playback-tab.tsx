@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { saveAudioAsWav, synthesizeSpeech, useTTSStore, type Voice } from "@/lib/tts-client"
+import { saveAudioAsWav, synthesizeSpeech, useHydratedTTSStore, type Voice } from "@/lib/tts-client"
 import { useToast } from "@/components/ui/use-toast"
 import { Download, Loader2, Pause, Play, Volume2 } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 
 export function PlaybackTab() {
-  const { selectedVoice, selectedVoices, audioUrl, setAudioUrl, isPlaying, setIsPlaying, credentials } = useTTSStore()
+  const { selectedVoice, selectedVoices, audioUrl, setAudioUrl, isPlaying, setIsPlaying, credentials } = useHydratedTTSStore()
   const [activeVoice, setActiveVoice] = useState<Voice | null>(selectedVoice)
   const { toast } = useToast()
   const [text, setText] = useState(

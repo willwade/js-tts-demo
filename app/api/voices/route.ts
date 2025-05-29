@@ -12,8 +12,8 @@ import {
   PollyTTSClient,
   SherpaOnnxTTSClient,
   SherpaOnnxWasmTTSClient,
-  EspeakTTSClient,
-  EspeakWasmTTSClient,
+  EspeakNodeTTSClient,
+  EspeakBrowserTTSClient,
   WatsonTTSClient,
   WitAITTSClient
 } from "js-tts-wrapper";
@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const engine = searchParams.get("engine") as "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx" | "sherpaonnx-wasm" | "espeak" | "espeak-wasm" | "watson" | "witai" | "mock";
     const enabled = searchParams.get("enabled");
+    const mode = searchParams.get("mode") as "auto" | "server" | "browser" | "hybrid" || "auto";
 
     if (!engine) {
       return NextResponse.json({ error: "Missing engine parameter" }, { status: 400 });
@@ -139,6 +140,12 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(voices);
           } catch (error: any) {
             console.error('Error fetching voices from SherpaOnnx server:', error);
+            // In WASM-only mode, the SherpaOnnx server might not be running
+            // Return an empty array instead of an error to allow graceful fallback
+            if (error.code === 'ECONNREFUSED') {
+              console.log('SherpaOnnx server not available (WASM-only mode), returning empty voices');
+              return NextResponse.json([]);
+            }
             return NextResponse.json(
               { error: `Failed to fetch SherpaOnnx voices: ${error?.message || 'Unknown error'}` },
               { status: 500 }
@@ -146,17 +153,16 @@ export async function GET(request: NextRequest) {
           }
 
         case "sherpaonnx-wasm":
-          client = new SherpaOnnxWasmTTSClient({
-            wasmPath: process.env.SHERPAONNX_WASM_PATH || null
-          });
+          client = new SherpaOnnxWasmTTSClient();
           break;
 
         case "espeak":
-          client = new EspeakTTSClient();
+          client = new EspeakNodeTTSClient();
           break;
 
         case "espeak-wasm":
-          client = new EspeakWasmTTSClient();
+          // Use the correct browser client for WebAssembly engine
+          client = new EspeakBrowserTTSClient();
           break;
 
         case "watson":
@@ -182,26 +188,29 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: `Unsupported engine: ${engine}` }, { status: 400 });
       }
 
-      // Check if credentials are valid
-      try {
-        const credentialsValid = await client.checkCredentials();
-        if (!credentialsValid) {
-          return NextResponse.json(
-            { error: `Invalid credentials for ${engine} TTS engine` },
-            { status: 401 }
-          );
-        }
-      } catch (error: any) {
-        console.error(`Error checking credentials for ${engine} TTS engine:`, error);
-
-        // For SherpaOnnx, we want to continue even if credentials check fails
-        if ((engine as string) === 'sherpaonnx') {
-          console.log('SherpaOnnx model files not available. Using mock implementation for example.');
-        } else {
+      // Check if credentials are valid (skip for WebAssembly engines)
+      const isWasmEngine = (engine as string).includes('-wasm');
+      if (!isWasmEngine && (engine as string) !== 'sherpaonnx') {
+        try {
+          const credentialsValid = await client.checkCredentials();
+          if (!credentialsValid) {
+            return NextResponse.json(
+              { error: `Invalid credentials for ${engine} TTS engine` },
+              { status: 401 }
+            );
+          }
+        } catch (error: any) {
+          console.error(`Error checking credentials for ${engine} TTS engine:`, error);
           return NextResponse.json(
             { error: `Error checking credentials for ${engine} TTS engine: ${error?.message || 'Unknown error'}` },
             { status: 500 }
           );
+        }
+      } else {
+        if (isWasmEngine) {
+          console.log(`${engine} WebAssembly engine doesn't require credentials. Skipping credentials check...`);
+        } else {
+          console.log('SherpaOnnx model files not available. Using mock implementation for example.');
         }
       }
     } catch (error: any) {
@@ -225,6 +234,7 @@ export async function GET(request: NextRequest) {
         display: lc.display,
       })),
       gender: voice.gender,
+      mode: mode, // Add mode information
     }));
 
     return NextResponse.json(transformedVoices);

@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { type TTSEngine, useTTSStore } from "@/lib/tts-client"
+import { type TTSEngine, useHydratedTTSStore } from "@/lib/tts-client"
 import { useToast } from "@/components/ui/use-toast"
 import { Save, Check } from "lucide-react"
+// import CredentialsStatus from "./credentials-status"
 
 export function CredentialsTab() {
-  const { credentials, setCredentials, toggleEngine } = useTTSStore()
+  const { credentials, setCredentials, toggleEngine } = useHydratedTTSStore()
   const { toast } = useToast()
   const [localCredentials, setLocalCredentials] = useState(credentials)
   const [savedEngines, setSavedEngines] = useState<Record<TTSEngine, boolean>>({
@@ -64,7 +65,12 @@ export function CredentialsTab() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-6">
+      {/* Environment Credentials Status */}
+      {/* <CredentialsStatus /> */}
+
+      {/* Manual Credential Configuration */}
+      <div className="grid gap-6 md:grid-cols-2">
       {/* Azure */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -484,6 +490,7 @@ export function CredentialsTab() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

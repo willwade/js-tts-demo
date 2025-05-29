@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { type TTSEngine, type Voice, fetchVoices, useTTSStore } from "@/lib/tts-client"
+import { type TTSEngine, type Voice, fetchVoices, useHydratedTTSStore } from "@/lib/tts-client"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, RefreshCw, Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function VoicesTab() {
-  const { credentials, voices, setVoices, setSelectedVoice, selectedVoices, toggleSelectedVoice } = useTTSStore()
+  const { credentials, voices, setVoices, setSelectedVoice, selectedVoices, toggleSelectedVoice } = useHydratedTTSStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState<Record<TTSEngine, boolean>>({
     azure: false,

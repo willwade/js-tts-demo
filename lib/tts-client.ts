@@ -2,9 +2,14 @@
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { mergeEnvCredentials, logCredentialStatus } from "./env-credentials"
+import { useEffect, useState } from "react"
 
 // Define types for TTS engines
 export type TTSEngine = "azure" | "elevenlabs" | "google" | "openai" | "playht" | "polly" | "sherpaonnx" | "sherpaonnx-wasm" | "espeak" | "espeak-wasm" | "watson" | "witai" | "mock"
+
+// Define TTS mode types
+export type TTSMode = "auto" | "server" | "browser" | "hybrid"
 
 export interface Voice {
   id: string
@@ -13,6 +18,7 @@ export interface Voice {
   languageCodes: { code: string; display: string }[]
   gender?: string
   preview?: string
+  mode?: TTSMode
 }
 
 export interface TTSCredentials {
@@ -78,6 +84,7 @@ interface TTSState {
   voices: Voice[]
   selectedVoice: Voice | null
   selectedVoices: Voice[]
+  currentMode: TTSMode
   isLoading: boolean
   audioUrl: string | null
   isPlaying: boolean
@@ -89,74 +96,90 @@ interface TTSState {
   removeSelectedVoice: (voice: Voice) => void
   toggleSelectedVoice: (voice: Voice) => void
   clearSelectedVoices: () => void
+  setCurrentMode: (mode: TTSMode) => void
   setIsLoading: (isLoading: boolean) => void
   setAudioUrl: (url: string | null) => void
   setIsPlaying: (isPlaying: boolean) => void
+  refreshCredentialsFromEnv: () => void
+}
+
+// Default credentials (fallback when no env vars are available)
+const getDefaultCredentials = (): TTSCredentials => {
+  const defaultCreds: TTSCredentials = {
+    azure: {
+      subscriptionKey: "",
+      region: "",
+      enabled: true,
+    },
+    elevenlabs: {
+      apiKey: "",
+      enabled: true,
+    },
+    google: {
+      keyFilename: "",
+      enabled: true,
+    },
+    openai: {
+      apiKey: "",
+      enabled: true,
+    },
+    playht: {
+      apiKey: "",
+      userId: "",
+      enabled: true,
+    },
+    polly: {
+      accessKeyId: "",
+      secretAccessKey: "",
+      region: "",
+      enabled: true,
+    },
+    sherpaonnx: {
+      enabled: true,
+    },
+    "sherpaonnx-wasm": {
+      enabled: true,
+    },
+    espeak: {
+      enabled: true,
+    },
+    "espeak-wasm": {
+      enabled: true,
+    },
+    watson: {
+      apiKey: "",
+      url: "",
+      region: "us-south",
+      instanceId: "",
+      enabled: true,
+    },
+    witai: {
+      token: "",
+      enabled: true,
+    },
+    mock: {
+      enabled: true,
+    },
+  }
+
+  // Merge with environment credentials
+  const mergedCredentials = mergeEnvCredentials(defaultCreds)
+
+  // Log credential status in development
+  logCredentialStatus()
+
+  return mergedCredentials
 }
 
 // Create store with persistence
 export const useTTSStore = create<TTSState>()(
   persist(
     (set) => ({
-      credentials: {
-        azure: {
-          subscriptionKey: "",
-          region: "",
-          enabled: true,
-        },
-        elevenlabs: {
-          apiKey: "",
-          enabled: true,
-        },
-        google: {
-          keyFilename: "",
-          enabled: true,
-        },
-        openai: {
-          apiKey: "",
-          enabled: true,
-        },
-        playht: {
-          apiKey: "",
-          userId: "",
-          enabled: true,
-        },
-        polly: {
-          accessKeyId: "",
-          secretAccessKey: "",
-          region: "",
-          enabled: true,
-        },
-        sherpaonnx: {
-          enabled: true,
-        },
-        "sherpaonnx-wasm": {
-          enabled: true,
-        },
-        espeak: {
-          enabled: true,
-        },
-        "espeak-wasm": {
-          enabled: true,
-        },
-        watson: {
-          apiKey: "",
-          url: "",
-          region: "us-south",
-          instanceId: "",
-          enabled: true,
-        },
-        witai: {
-          token: "",
-          enabled: true,
-        },
-        mock: {
-          enabled: true,
-        },
-      },
+      credentials: getDefaultCredentials(),
       voices: [],
       selectedVoice: null,
       selectedVoices: [],
+      currentMode: "auto" as TTSMode,
       isLoading: false,
       audioUrl: null,
       isPlaying: false,
@@ -197,15 +220,21 @@ export const useTTSStore = create<TTSState>()(
         };
       }),
       clearSelectedVoices: () => set({ selectedVoices: [] }),
+      setCurrentMode: (currentMode) => set({ currentMode }),
       setIsLoading: (isLoading) => set({ isLoading }),
       setAudioUrl: (audioUrl) => set({ audioUrl }),
       setIsPlaying: (isPlaying) => set({ isPlaying }),
+      // Refresh credentials from environment variables
+      refreshCredentialsFromEnv: () => set((state) => ({
+        credentials: mergeEnvCredentials(state.credentials)
+      })),
     }),
     {
       name: "tts-storage",
       partialize: (state) => ({
         credentials: state.credentials,
         selectedVoice: state.selectedVoice,
+        currentMode: state.currentMode,
       }),
     },
   ),
@@ -306,4 +335,31 @@ export async function saveAudioAsWav(audioUrl: string, filename: string): Promis
     console.error("Failed to save audio:", error)
     throw error
   }
+}
+
+// Hydration-safe hook to use the TTS store
+export function useHydratedTTSStore() {
+  const [isHydrated, setIsHydrated] = useState(false)
+  const store = useTTSStore()
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Return default values during SSR to prevent hydration mismatch
+  if (!isHydrated) {
+    return {
+      ...store,
+      credentials: getDefaultCredentials(),
+      voices: [],
+      selectedVoice: null,
+      selectedVoices: [],
+      currentMode: "auto" as TTSMode,
+      isLoading: false,
+      audioUrl: null,
+      isPlaying: false,
+    }
+  }
+
+  return store
 }

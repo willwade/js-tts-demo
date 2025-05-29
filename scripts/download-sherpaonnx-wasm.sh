@@ -6,7 +6,7 @@
 set -e
 
 # Create output directory
-OUTPUT_DIR="wasm-server/public/wasm"
+OUTPUT_DIR="public/sherpaonnx-wasm"
 mkdir -p $OUTPUT_DIR
 
 # Download pre-built WebAssembly modules

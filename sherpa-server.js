@@ -1,5 +1,5 @@
 /**
- * Simplified SherpaOnnx server using js-tts-wrapper v0.1.22 fixes
+ * Simplified SherpaOnnx server using js-tts-wrapper v0.1.23 with lexicon file fixes
  */
 
 const express = require('express');
@@ -15,12 +15,12 @@ app.use(bodyParser.json());
 let SherpaOnnxTTSClient;
 let sherpaOnnxClient = null;
 
-// Initialize server with js-tts-wrapper v0.1.22
+// Initialize server with js-tts-wrapper v0.1.23
 async function initializeServer() {
-  console.log('Initializing SherpaOnnx server with js-tts-wrapper v0.1.22...');
+  console.log('Initializing SherpaOnnx server with js-tts-wrapper v0.1.23...');
 
   try {
-    // This should now work with the CommonJS fix in v0.1.22
+    // This should now work with the CommonJS fix and lexicon file downloads in v0.1.23
     const wrapper = require('js-tts-wrapper');
     SherpaOnnxTTSClient = wrapper.SherpaOnnxTTSClient;
     console.log('✅ Successfully imported SherpaOnnxTTSClient');

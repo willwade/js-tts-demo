@@ -10,8 +10,8 @@ import {
   PollyTTSClient,
   SherpaOnnxTTSClient,
   SherpaOnnxWasmTTSClient,
-  EspeakTTSClient,
-  EspeakWasmTTSClient,
+  EspeakNodeTTSClient,
+  EspeakBrowserTTSClient,
   WatsonTTSClient,
   WitAITTSClient
 } from "js-tts-wrapper";
@@ -115,6 +115,7 @@ function writeString(view: DataView, offset: number, string: string): void {
 export async function POST(request: NextRequest) {
   try {
     const { text, engine, voiceId, options } = await request.json();
+    const mode = options?.mode || "server"; // Default to server mode for API routes
 
     // Validate request
     if (!text || !engine || !voiceId) {
@@ -201,17 +202,16 @@ export async function POST(request: NextRequest) {
           }
 
         case "sherpaonnx-wasm":
-          client = new SherpaOnnxWasmTTSClient({
-            wasmPath: process.env.SHERPAONNX_WASM_PATH || null
-          });
+          client = new SherpaOnnxWasmTTSClient();
           break;
 
         case "espeak":
-          client = new EspeakTTSClient();
+          client = new EspeakNodeTTSClient();
           break;
 
         case "espeak-wasm":
-          client = new EspeakWasmTTSClient();
+          // Use the correct browser client for WebAssembly engine
+          client = new EspeakBrowserTTSClient();
           break;
 
         case "watson":
@@ -237,13 +237,22 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: `Unsupported engine: ${engine}` }, { status: 400 });
       }
 
-      // Check if credentials are valid
-      const credentialsValid = await client.checkCredentials();
-      if (!credentialsValid) {
-        return NextResponse.json(
-          { error: `Invalid credentials for ${engine} TTS engine` },
-          { status: 401 }
-        );
+      // Check if credentials are valid (skip for WebAssembly engines)
+      const isWasmEngine = (engine as string).includes('-wasm');
+      if (!isWasmEngine && (engine as string) !== 'sherpaonnx') {
+        const credentialsValid = await client.checkCredentials();
+        if (!credentialsValid) {
+          return NextResponse.json(
+            { error: `Invalid credentials for ${engine} TTS engine` },
+            { status: 401 }
+          );
+        }
+      } else {
+        if (isWasmEngine) {
+          console.log(`${engine} WebAssembly engine doesn't require credentials. Skipping credentials check...`);
+        } else {
+          console.log('SherpaOnnx model files not available. Using mock implementation for example.');
+        }
       }
     } catch (error) {
       console.error(`Error creating ${engine} TTS client:`, error);
